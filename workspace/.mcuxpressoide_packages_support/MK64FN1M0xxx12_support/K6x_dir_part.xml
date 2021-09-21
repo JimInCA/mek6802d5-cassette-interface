@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chips chipVendor="NXP"
+       family="K6x"
+       vendorURL="http://www.nxp.com"
+       chipURL="">
+   <chip name="MK64FN1M0xxx12"
+         displayName="MK64FN1M0xxx12"
+         xml_file="MK64F12_internal.xml"
+         chipURL=""/>
+</chips>

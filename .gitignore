@@ -1,0 +1,7 @@
+AzureRTOS_TAD_logs/
+FreeRTOS_TAD_logs/
+.metadata/
+Debug/
+Release/
+*.launch
+
