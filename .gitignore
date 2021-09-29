@@ -4,4 +4,7 @@ FreeRTOS_TAD_logs/
 Debug/
 Release/
 *.launch
+*/obj
+*/bin
+*/x64
 
