@@ -1,54 +1,91 @@
 
 # Cassette Interface for the Motorola MEK6802D5
 
-The intent of this program is to emulate the cassette interface for the Motorola MEK6802D5 Development Board.  This will allow you to either load an assembled binary program in to the ram memory of the MEK6802D5 or save the binary data located in either ram or rom memory of the MEK6802D5 to your host computer.
+NOTE:  This is a work in progress.  The following is just for reference for now and will be enhanced as time goes along.
 
-For loading, what this program does is it simulates the audio signal that would normally be coming from a cassette tape drive.  This provides the ability to write your assembly code in a standard text editor and use the Motorola 6800 assembler to generate your binary file that can then be loaded using this program.  You can also use this program to save the code or data located in either the board's ram or rom.  
+The intent of this project is to emulate the cassette interface for the Motorola MEK6802D5 Development Board using modern technology.  
 
-Toolchain supported
-===================
-- MCUXpresso  11.4.0
+I originally implemented a cassette interface for the MEK6802D5 using a circuit called the bit-boffer which uses 1970's vintage technology.  The bit-boffer was a lot of fun to build and it worked perfectly.  But it is quite cumbersome requiring two solderless breadboards, eight ICs, two Teensy development boards, and countless discreet components and wires.  So I decided to duplicate the functionally of the bit-boffer but using modern technology.  I decided to use the NXP FRDM-K64F board because it has a DAC that I can use to simulate the transmitter and a comparator that I can use to simulate the receiver.  I also just happened to have this board in my vast collection of prototype/development boards, so the decision to use this was simple.  
 
-Hardware requirements
-=====================
-- Mini/Micro USB cable
-- FRDM-K64F board
-- Personal Computer
+NOTE:  At this point, I have the transmitter and receiver portions working.  But the issue is that the with this board, I can't change the baud rate for the board's interface.  I have the transmitter working at the board's 115200 baud rate, the the receiver requires 300 baud, hence the need to a Teensy to act as the UART to USB interface.  Here's a very poor photo of my current set-up:
 
-Board settings
-==============
-Nothing special is needed.
+![alt text](./images/FRDM-K64F-Board.jpg?raw=true "MEK6802D5")
 
-Preparing the software
-======================
-You will first need to install MCUXpresso Version 11.4.0. This is the version that I'm using,
-but other versions may work as well.  Once you have MCUXpresso installed, execute the program.
-Once MCUXpresso comes up, you will need to select 'Switch Workspace -> Other...' from the File 
-menu.  Once the pop-up has completed loading, select ./mek6802d5-cassette-interface/workspace as your 
-workspace.  You will then need to select "Import projects..." in the Project Explorer tab.  
-Then under General, select 'Existing Projects into Workspace" and press the Next button.   
-Select <path>.\mek6802d5-cassette-interface\workspace as your root directory, make sure that the 
-mek6802d5_cassette_interface project is selected and then press the Finish button.  This should load the
-mek6802d5_cassette_interface program into the project Explorer tab.  Then simply left click on the 
-mek6802d5_cassette_interface project, right click to bring up the menu, and then select Build Project.
-This should compile the program.
+I also modified my bit-boffer test program to work the the split baud rates so that I could easily test the prototype system with a known good test case.  I'll update the program and this README once I have finalized my prototype.
 
-Prepare the board
-=================
-1.  Connect a USB cable between the PC host and the OpenSDA USB port on the board.
-2.  Open a serial terminal on PC for OpenSDA serial device with these settings:
-    - 115200 baud rate
-    - 8 data bits
-    - No parity
-    - One stop bit
-    - No flow control
-3.  Download the program to the target board.
-4.  Either press the reset button on your board or launch the debugger in your IDE to begin running the demo.
-5.  A scope may be used to verify the output signal on pin J4[11]:DAC output using an oscilloscope.  
-6.  Pin J1[8] can be used as a trigger for the scope.
+test_cassette_interface
+---
+The test_cassette_interface application program runs on a Widows host and can be built using gcc.  I also provided a solution file so that you can build the application under Visual Studio if you so desire.
 
-Running the loader
-==================
+test_cassette_interface's help menu lists the usage and arguments for the application as shown below.
 
-TBD
+```
+$ ./bin/test_cassette_interface.exe -h
+usage: test_cassette_interface [-h] -i COMPORT [-o COMPORT] [-b BAUDRATE] [-t TESTNUM] [-n LOOPNUM]
 
+arguments:
+  -h             Show this help message and exit.
+  -i COMPORT     Transmitter COM Port.
+  -o COMPORT     Receiver COM Port when TESTNUM > 0.
+  -b BAUDRATE    Desired baudrate, default: 300.
+  -t TESTNUM     Desired test to be executed.
+                 0: Generate a count from 0x00 to 0xff and send to transmitter.
+                    Connect a uart terminal window to receiver's com port.
+                 1: Generate a count from 0x00 to 0xff, send to transmitter
+                    and verify that the receiver received the correct data.
+                 2: Send 'n' number of 0xff markers to transmitter and verify on receiver.
+                 3: Send code for USED5 program to transmitter and verify on receiver.
+                 4: Combine test 2 followed by test 3. This emulates a Load sequence.
+                 5: Generate 'n' number of random bytes, send to transmitter and
+                    verify on receiver.
+  -n LOOPNUM     Number of test cycles in test loop.
+```
+
+All tests require that you connect the output of the transmitter directly to the input of the receiver.  This provides the ability for closed-loop testing.  
+
+An example execution of test_cassette_interface follows:
+```
+$ ./bin/test_cassette_interface.exe -i COM22 -o COM9 -b 300 -t 5 -n 8 -v 1
+Successfully connected to UART on port COM22 at baud rate 300.
+Connected to transmitter port COM22 at baudrate 115200
+Successfully connected to UART on port COM9 at baud rate 300.
+Connected to receiver port COM9 at baudrate 300
+sent 0x43 -> received 0x43
+sent 0xe3 -> received 0xe3
+sent 0xdf -> received 0xdf
+sent 0x86 -> received 0x86
+sent 0x30 -> received 0x30
+sent 0x06 -> received 0x06
+sent 0xf8 -> received 0xf8
+sent 0xf4 -> received 0xf4
+Test 5 Passed!
+```
+
+bit-boffer-writer  --- NOT IMPLEMENTED YET!!!
+---
+bit-boffer-writter is the application that you'll need to run to load code into the Motorola D5's ram.  It too can be built with either gcc or Visual Studio.
+
+bit-boffer-writter's help menu lists the usage and arguments for the application as shown below: 
+
+```
+$  ./bin/bit-boffer-writer.exe -h
+usage: bit-boffer-writer [-h] -f FILE -p COMPORT [-b BAUDRATE] [-c NUMMARKS]
+
+arguments:
+  -h             Show this help message and exit.
+  -f FILE        Filename of S-Record input file.
+  -p COMPORT     COM Port to which the device is connected.
+  -b BAUDRATE    Desired baudrate, default: 300.
+  -c NUMMARKS    Number of marker cycles. default: 819.
+```
+
+The expected output from running bit-boffer-writer should look like the following example.
+
+```
+$ ./bin/bit-boffer-writer.exe -f ./test/used5.s19 -p COM22 -b 300 -c 1024
+Successfully connected to UART on port COM22 at baud rate 300.
+DCB is ready for use.
+Sending file ./test/used5.s19 to port COM22 at baudrate 300
+```
+
+That's it for now and most of all, have fun with all of your projects.
