@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?debugstack-directory version="1.0"?>
 <directory xmlns:xi="http://www.w3.org/2001/XInclude">
-   <xi:include href="file:/C:/Users/Jim/development/mek6802d5-loader/workspace/.mcuxpressoide_packages_support/MK64FN1M0xxx12_support/K6x_dir_part.xml"/>
+   <xi:include href="file:/C:/Users/Jim/development/mek6802d5-cassette-interface/workspace/.mcuxpressoide_packages_support/MK64FN1M0xxx12_support/K6x_dir_part.xml"/>
 </directory>
