@@ -58,6 +58,37 @@ void BOARD_InitBootPins(void);
 #define BOARD_SCOPE_TRIGGER_PIN_MASK (1U << 1U)      /*!<@brief PORT pin mask */
                                                      /* @} */
 
+/*! @name PORTB18 (number 64), J1[1]
+  @{ */
+
+/* Symbols to be used with GPIO driver */
+#define BOARD_CMP0_UART_TX_GPIO GPIOB                /*!<@brief GPIO peripheral base pointer */
+#define BOARD_CMP0_UART_TX_GPIO_PIN_MASK (1U << 18U) /*!<@brief GPIO pin mask */
+
+/* Symbols to be used with PORT driver */
+#define BOARD_CMP0_UART_TX_PORT PORTB                /*!<@brief PORT peripheral base pointer */
+#define BOARD_CMP0_UART_TX_PIN 18U                   /*!<@brief PORT pin number */
+#define BOARD_CMP0_UART_TX_PIN_MASK (1U << 18U)      /*!<@brief PORT pin mask */
+                                                     /* @} */
+
+/*! @name PORTC5 (number 77), J1[15]
+  @{ */
+
+/* Symbols to be used with PORT driver */
+#define BOARD_CMP0_OUT_PORT PORTC               /*!<@brief PORT peripheral base pointer */
+#define BOARD_CMP0_OUT_PIN 5U                   /*!<@brief PORT pin number */
+#define BOARD_CMP0_OUT_PIN_MASK (1U << 5U)      /*!<@brief PORT pin mask */
+                                                /* @} */
+
+/*! @name PORTC7 (number 79), J1[13]
+  @{ */
+
+/* Symbols to be used with PORT driver */
+#define BOARD_CMP0_IN1_PORT PORTC               /*!<@brief PORT peripheral base pointer */
+#define BOARD_CMP0_IN1_PIN 7U                   /*!<@brief PORT pin number */
+#define BOARD_CMP0_IN1_PIN_MASK (1U << 7U)      /*!<@brief PORT pin mask */
+                                                /* @} */
+
 /*!
  * @brief Configures pin routing and optionally pin electrical features.
  *

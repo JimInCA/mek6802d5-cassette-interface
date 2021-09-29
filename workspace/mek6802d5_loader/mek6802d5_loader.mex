@@ -26,6 +26,9 @@
             <processor_version>10.0.0</processor_version>
             <pin_labels>
                <pin_label pin_num="35" pin_signal="PTA1/UART0_RX/FTM0_CH6/JTAG_TDI/EZP_DI" label="J1[8]" identifier="SCOPE_TRIGGER"/>
+               <pin_label pin_num="36" pin_signal="PTA2/UART0_TX/FTM0_CH7/JTAG_TDO/TRACE_SWO/EZP_DO" label="J1[12]/J9[6]/TRACE_SWO" identifier="UART_TX"/>
+               <pin_label pin_num="64" pin_signal="PTB18/CAN0_TX/FTM2_CH0/I2S0_TX_BCLK/FB_AD15/FTM2_QD_PHA" label="J1[1]" identifier="CMP0_UART_TX"/>
+               <pin_label pin_num="77" pin_signal="PTC5/LLWU_P9/SPI0_SCK/LPTMR0_ALT2/I2S0_RXD0/FB_AD10/CMP0_OUT/FTM0_CH2" label="J1[15]" identifier="CMP0_OUT"/>
             </pin_labels>
          </pins_profile>
          <functions_list>
@@ -38,6 +41,11 @@
                </options>
                <dependencies>
                   <dependency resourceType="Peripheral" resourceId="UART0" description="Peripheral UART0 is not initialized" problem_level="1" source="Pins:BOARD">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="Peripheral" resourceId="CMP0" description="Peripheral CMP0 is not initialized" problem_level="1" source="Pins:BOARD">
                      <feature name="initialized" evaluation="equal">
                         <data>true</data>
                      </feature>
@@ -68,6 +76,14 @@
                         <pin_feature name="pull_enable" value="disable"/>
                      </pin_features>
                   </pin>
+                  <pin peripheral="GPIOB" signal="GPIO, 18" pin_num="64" pin_signal="PTB18/CAN0_TX/FTM2_CH0/I2S0_TX_BCLK/FB_AD15/FTM2_QD_PHA">
+                     <pin_features>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                        <pin_feature name="drive_strength" value="high"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="CMP0" signal="OUT" pin_num="77" pin_signal="PTC5/LLWU_P9/SPI0_SCK/LPTMR0_ALT2/I2S0_RXD0/FB_AD10/CMP0_OUT/FTM0_CH2"/>
+                  <pin peripheral="CMP0" signal="IN, 1" pin_num="79" pin_signal="CMP0_IN1/PTC7/SPI0_SIN/USB_SOF_OUT/I2S0_RX_FS/FB_AD8"/>
                </pins>
             </function>
          </functions_list>
@@ -201,13 +217,122 @@
          </dcdx_profile>
          <dcdx_configurations/>
       </dcdx>
-      <periphs name="Peripherals" version="10.0" enabled="false" update_project_code="true">
-         <generated_project_files/>
+      <periphs name="Peripherals" version="10.0" enabled="true" update_project_code="true">
+         <dependencies>
+            <dependency resourceType="SWComponent" resourceId="platform.drivers.cmp" description="CMP Driver not found in the toolchain/IDE project. Project will not compile!" problem_level="2" source="Peripherals">
+               <feature name="enabled" evaluation="equal">
+                  <data type="Boolean">true</data>
+               </feature>
+            </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.drivers.cmp" description="Unsupported version of the CMP Driver in the toolchain/IDE project. Required: ${required_value}, actual: ${actual_value}. Project might not compile correctly." problem_level="1" source="Peripherals">
+               <feature name="version" evaluation="greaterOrEqual">
+                  <data type="Version">2.0.0</data>
+               </feature>
+            </dependency>
+         </dependencies>
+         <generated_project_files>
+            <file path="board/peripherals.c" update_enabled="true"/>
+            <file path="board/peripherals.h" update_enabled="true"/>
+         </generated_project_files>
          <peripherals_profile>
-            <processor_version>N/A</processor_version>
+            <processor_version>10.0.0</processor_version>
          </peripherals_profile>
-         <functional_groups/>
-         <components/>
+         <functional_groups>
+            <functional_group name="BOARD_InitPeripherals" uuid="0ce4f511-32d0-4c6b-86f5-05bcfa798f20" called_from_default_init="true" id_prefix="" core="core0">
+               <description></description>
+               <options/>
+               <dependencies>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="CMP0.cmp_out" description="Signal Output of the peripheral CMP0 is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="CMP0.cmp_in.1" description="Signal Input 1 of the peripheral CMP0 is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <instances>
+                  <instance name="NVIC" uuid="ef5ce90f-3ab7-43b9-a246-f333bbd41376" type="nvic" type_id="nvic_57b5eef3774cc60acaede6f5b8bddc67" mode="general" peripheral="NVIC" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
+                     <config_set name="nvic">
+                        <array name="interrupt_table">
+                           <struct name="0"/>
+                        </array>
+                        <array name="interrupts"/>
+                     </config_set>
+                  </instance>
+                  <instance name="CMP0" uuid="f1449d33-fb2e-4f88-8582-da89d4d73924" type="cmp" type_id="cmp_306724f57b92dbe1771f1514089d2b18" mode="interrupt" peripheral="CMP0" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
+                     <config_set name="fsl_filter" quick_selection="ContinuousMode">
+                        <struct name="filter_config">
+                           <set name="filteringOptions">
+                              <selected/>
+                           </set>
+                        </struct>
+                     </config_set>
+                     <config_set name="fsl_cmp">
+                        <struct name="main_config">
+                           <setting name="explicitEnableCmp" value="true"/>
+                           <setting name="hysteresisMode" value="kCMP_HysteresisLevel1"/>
+                           <setting name="enableHighSpeed" value="false"/>
+                           <setting name="enableInvertOutput" value="true"/>
+                           <setting name="useUnfilteredOutput" value="false"/>
+                           <setting name="enablePinOut" value="true"/>
+                        </struct>
+                        <setting name="positiveChannel" value="IN.1"/>
+                        <setting name="negativeChannel" value="IN.7"/>
+                        <setting name="enablePassThroughMode" value="true"/>
+                     </config_set>
+                     <config_set name="fsl_dac">
+                        <setting name="enableDAC" value="true"/>
+                        <struct name="dac_config">
+                           <setting name="referenceVoltageSource" value="DAC_6bit_VIN2"/>
+                           <setting name="DACValue" value="32"/>
+                        </struct>
+                     </config_set>
+                     <config_set name="interrupt" quick_selection="QS_IRQ_priority1">
+                        <set name="interrupt_sel">
+                           <selected>
+                              <id>kCMP_OutputRisingInterruptEnable</id>
+                              <id>kCMP_OutputFallingInterruptEnable</id>
+                           </selected>
+                        </set>
+                        <setting name="enableDma" value="false"/>
+                        <struct name="interrupt">
+                           <setting name="IRQn" value="CMP0_IRQn"/>
+                           <setting name="enable_interrrupt" value="enabled"/>
+                           <setting name="enable_priority" value="false"/>
+                           <setting name="priority" value="0"/>
+                           <setting name="enable_custom_name" value="false"/>
+                        </struct>
+                     </config_set>
+                  </instance>
+               </instances>
+            </functional_group>
+         </functional_groups>
+         <components>
+            <component name="system" uuid="017b9d25-7ad5-4ab1-998f-08a99e3a5a5b" type_id="system_54b53072540eeeb8f8e9343e71f28176">
+               <config_set_global name="global_system_definitions">
+                  <setting name="user_definitions" value=""/>
+                  <setting name="user_includes" value=""/>
+               </config_set_global>
+            </component>
+            <component name="uart_cmsis_common" uuid="07e22e72-b923-4b85-a6c7-0725dbeb26b1" type_id="uart_cmsis_common_9cb8e302497aa696fdbb5a4fd622c2a8">
+               <config_set_global name="global_USART_CMSIS_common" quick_selection="default"/>
+            </component>
+            <component name="msg" uuid="f6014442-914a-4b40-a769-b187b68ec79e" type_id="msg_6e2baaf3b97dbeef01c0043275f9a0e7">
+               <config_set_global name="global_messages"/>
+            </component>
+            <component name="generic_uart" uuid="4400a410-cee1-45a5-905c-53d3c85b7204" type_id="generic_uart_8cae00565451cf2346eb1b8c624e73a6">
+               <config_set_global name="global_uart"/>
+            </component>
+            <component name="generic_enet" uuid="b1d19744-4665-4b6e-82fd-8fbd1705cf5e" type_id="generic_enet_74db5c914f0ddbe47d86af40cb77a619">
+               <config_set_global name="global_enet"/>
+            </component>
+            <component name="generic_can" uuid="7917d8b3-0a25-4dc7-868f-08a4fcbbe2bd" type_id="generic_can_1bfdd78b1af214566c1f23cf6a582d80">
+               <config_set_global name="global_can"/>
+            </component>
+         </components>
       </periphs>
       <tee name="TEE" version="4.0" enabled="false" update_project_code="true">
          <generated_project_files/>

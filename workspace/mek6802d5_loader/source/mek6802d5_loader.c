@@ -6,10 +6,13 @@
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "board.h"
+#include "peripherals.h"
+
 #include "fsl_dac.h"
 #include "fsl_common.h"
 #include "fsl_ftm.h"
 #include "fsl_uart.h"
+#include "fsl_cmp.h"
 
 #include "queue.h"
 
@@ -30,6 +33,12 @@
 // Interrupt number and interrupt handler for the FTM instance used
 #define DAC_FTM_IRQ_NUM FTM1_IRQn
 #define DAC_FTM_HANDLER FTM1_IRQHandler
+
+// set up scope probe pulse width timer
+#define CMP_PULSEWIDTH_FTM_BASEADDR FTM2
+// Interrupt number and interrupt handler for the FTM instance used
+#define CMP_PULSEWIDTH_FTM_IRQ_NUM FTM2_IRQn
+#define CMP_PULSEWIDTH_FTM_HANDLER FTM2_IRQHandler
 
 // Get source clock for FTM driver
 #define FTM_SOURCE_CLOCK (CLOCK_GetFreq(kCLOCK_BusClk) / 1)
@@ -171,6 +180,52 @@ void write_byte(uint8_t data_byte)
 	write_1();					// second stop bit
 }
 
+volatile uint32_t g_CmpFlags = 0U;
+
+void CMP0_IRQHANDLER(void)
+{
+	static uint32_t rising_edge_count = 0;
+	static uint32_t falling_edge_count = 0;
+	uint32_t pulse_width;
+
+    g_CmpFlags = CMP_GetStatusFlags(CMP0_PERIPHERAL);
+    CMP_ClearStatusFlags(CMP0_PERIPHERAL, kCMP_OutputRisingEventFlag | kCMP_OutputFallingEventFlag);
+    if (0U != (g_CmpFlags & kCMP_OutputRisingEventFlag))
+    {
+        rising_edge_count = FTM_GetCurrentTimerCount(CMP_PULSEWIDTH_FTM_BASEADDR);
+    }
+    else if (0U != (g_CmpFlags & kCMP_OutputFallingEventFlag))
+    {
+        falling_edge_count = FTM_GetCurrentTimerCount(CMP_PULSEWIDTH_FTM_BASEADDR);
+
+        if (falling_edge_count > rising_edge_count)
+        {
+        	pulse_width = falling_edge_count - rising_edge_count;
+        }
+        else
+        {
+        	pulse_width = falling_edge_count + (0xffff - rising_edge_count);
+        }
+
+		if (pulse_width > 18750)
+		{
+			GPIO_PortClear(BOARD_CMP0_UART_TX_GPIO, 1u << BOARD_CMP0_UART_TX_PIN);
+		}
+		else
+		{
+			GPIO_PortSet(BOARD_CMP0_UART_TX_GPIO, 1u << BOARD_CMP0_UART_TX_PIN);
+		}
+    }
+    SDK_ISR_EXIT_BARRIER;
+}
+
+void CMP_PULSEWIDTH_FTM_HANDLER(void)
+{
+    // Clear interrupt flag
+    FTM_ClearStatusFlags(CMP_PULSEWIDTH_FTM_BASEADDR, kFTM_TimeOverflowFlag);
+    __DSB();
+}
+
 int main(void)
 {
     uint8_t index;
@@ -178,6 +233,7 @@ int main(void)
     uint32_t dacValue;
     ftm_config_t scope_trigger_info;
     ftm_config_t dac_timer_info;
+    ftm_config_t cmp_pulsewidth_info;
     uart_config_t config;
 
 	QUEUE_TYPE data;
@@ -221,6 +277,20 @@ int main(void)
     FTM_SetTimerPeriod(DAC_FTM_BASEADDR, STEP_DELAY);	// base clock is 60MHz
     FTM_EnableInterrupts(DAC_FTM_BASEADDR, kFTM_TimeOverflowInterruptEnable);
     EnableIRQ(DAC_FTM_IRQ_NUM);
+
+    // setup cmp pulse width timer
+    FTM_GetDefaultConfig(&cmp_pulsewidth_info);
+    // Divide FTM clock by 4
+    cmp_pulsewidth_info.prescale = kFTM_Prescale_Divide_1;
+    // Initialize FTM module
+    FTM_Init(CMP_PULSEWIDTH_FTM_BASEADDR, &cmp_pulsewidth_info);
+    // Set timer period
+    FTM_SetTimerPeriod(CMP_PULSEWIDTH_FTM_BASEADDR, 0xFFFF);
+    //FTM_EnableInterrupts(CMP_PULSEWIDTH_FTM_BASEADDR, kFTM_TimeOverflowInterruptEnable);
+    //EnableIRQ(CMP_PULSEWIDTH_FTM_IRQ_NUM);
+	FTM_StartTimer(CMP_PULSEWIDTH_FTM_BASEADDR, kFTM_SystemClock);
+
+    BOARD_InitBootPeripherals();
 
     // Configure the DAC
     //
