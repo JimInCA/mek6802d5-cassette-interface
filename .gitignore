@@ -1,5 +1,6 @@
 AzureRTOS_TAD_logs/
 FreeRTOS_TAD_logs/
+USB2UART_Bridge/
 .metadata/
 Debug/
 Release/
