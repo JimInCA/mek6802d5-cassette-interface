@@ -40,6 +40,12 @@
 #define CMP_PULSEWIDTH_FTM_IRQ_NUM FTM2_IRQn
 #define CMP_PULSEWIDTH_FTM_HANDLER FTM2_IRQHandler
 
+// set up uart strobing timer
+#define UART_TIMER_FTM_BASEADDR FTM3
+// Interrupt number and interrupt handler for the FTM instance used
+#define UART_TIMER_FTM_IRQ_NUM FTM3_IRQn
+#define UART_TIMER_FTM_HANDLER FTM3_IRQHandler
+
 // Get source clock for FTM driver
 #define FTM_SOURCE_CLOCK (CLOCK_GetFreq(kCLOCK_BusClk) / 1)
 
@@ -64,7 +70,16 @@ uint16_t g_dacDataArray[DAC_USED_BUFFER_SIZE] = {
 	    2172U, 2475U, 2766U, 3034U, 3269U, 3462U, 3606U, 3694U, 3724U, 3694U, 3606U, 3462U, 3269U, 3034U, 2766U, 2475U,
 	    2172U, 1869U, 1578U, 1310U, 1075U,  882U,  739U,  650U,  621U,  650U,  739U,  882U, 1075U, 1310U, 1578U, 1869U};
 
-QUEUE tx_rx_queue;
+QUEUE tx_queue, rx_queue;
+
+typedef struct _output_waveform_t {
+	bool     active;
+	uint8_t  state;
+	uint8_t  output;
+	uint16_t uart_data;
+} output_waveform_t;
+
+static volatile output_waveform_t output_waveform;
 
 /*******************************************************************************
  * Code
@@ -80,7 +95,7 @@ void TX_UART_IRQHandler(void)
         data = UART_ReadByte(TX_UART);
 
         /* If ring buffer is not full, add data to ring buffer. */
-        if (queue_enqueue(&tx_rx_queue, data) == false)
+        if (queue_enqueue(&tx_queue, data) == false)
         	UART_WriteBlocking(TX_UART, "\r\nFailure in queue_enqueue()\r\n", 30);
     }
     SDK_ISR_EXIT_BARRIER;
@@ -180,6 +195,67 @@ void write_byte(uint8_t data_byte)
 	write_1();					// second stop bit
 }
 
+void UART_TIMER_FTM_HANDLER(void)
+{
+	uint32_t uart_state, uart_mask;
+
+    // Clear interrupt flag
+    FTM_ClearStatusFlags(UART_TIMER_FTM_BASEADDR, kFTM_TimeOverflowFlag);
+    FTM_StopTimer(UART_TIMER_FTM_BASEADDR);
+
+    //uart_state = output_waveform.output;	// Kludge!  Can't seem to read output pin!
+    uart_state = GPIO_PinRead(BOARD_CMP0_UART_TX_GPIO, BOARD_CMP0_UART_TX_PIN);
+
+	uart_mask = (0x0001 << output_waveform.state);
+
+    switch (output_waveform.state)
+    {
+    case  0: uart_mask = 0x0001; break; // start bit
+    case  1: uart_mask = 0x0002; break; // D0 bit
+    case  2: uart_mask = 0x0004; break; // D1 bit
+    case  3: uart_mask = 0x0008; break; // D2 bit
+    case  4: uart_mask = 0x0010; break; // D3 bit
+    case  5: uart_mask = 0x0020; break; // D4 bit
+    case  6: uart_mask = 0x0040; break; // D5 bit
+    case  7: uart_mask = 0x0080; break; // D6 bit
+    case  8: uart_mask = 0x0100; break; // D7 bit
+    case  9: uart_mask = 0x0200; break; // stop bit 1
+    case 10: uart_mask = 0x0400; break; // stop bit 2
+    };
+
+    if (uart_state > 0)
+    {
+        output_waveform.uart_data |= uart_mask;
+    }
+    else
+    {
+    	output_waveform.uart_data &= ~uart_mask;
+    };
+
+    if (output_waveform.state++ < 10)
+    {
+        FTM_SetTimerPeriod(UART_TIMER_FTM_BASEADDR, 50000);	// base clock is 15MHz
+        FTM_StartTimer(UART_TIMER_FTM_BASEADDR, kFTM_SystemClock);
+    }
+    else
+    {
+    	static QUEUE_TYPE data;
+
+        FTM_StopTimer(UART_TIMER_FTM_BASEADDR);
+
+        data = ((output_waveform.uart_data >> 1) & 0x000000ff);
+        if (queue_enqueue(&rx_queue, data) == false)
+        	UART_WriteBlocking(TX_UART, "\r\nFailure in queue_enqueue()\r\n", 30);
+
+    	output_waveform.active    = false;
+	    output_waveform.state     = 0;
+	    output_waveform.uart_data = 0;
+	    output_waveform.output    = 1;
+    }
+
+    __DSB();
+}
+
 volatile uint32_t g_CmpFlags = 0U;
 
 void CMP0_IRQHANDLER(void)
@@ -210,10 +286,25 @@ void CMP0_IRQHANDLER(void)
 		if (pulse_width > 18750)
 		{
 			GPIO_PortClear(BOARD_CMP0_UART_TX_GPIO, 1u << BOARD_CMP0_UART_TX_PIN);
+			output_waveform.output = 0;
+			if (output_waveform.active == false)
+			{
+				output_waveform.active    = true;
+				output_waveform.state     = 0;
+				output_waveform.uart_data = 0;
+
+			    FTM_SetTimerPeriod(UART_TIMER_FTM_BASEADDR, 25000);	// base clock is 15MHz
+				FTM_StartTimer(UART_TIMER_FTM_BASEADDR, kFTM_SystemClock);
+			}
 		}
 		else
 		{
 			GPIO_PortSet(BOARD_CMP0_UART_TX_GPIO, 1u << BOARD_CMP0_UART_TX_PIN);
+			output_waveform.output = 1;
+			if (output_waveform.active == true)
+			{
+				output_waveform.output = 1;
+			}
 		}
     }
     SDK_ISR_EXIT_BARRIER;
@@ -234,15 +325,22 @@ int main(void)
     ftm_config_t scope_trigger_info;
     ftm_config_t dac_timer_info;
     ftm_config_t cmp_pulsewidth_info;
+    ftm_config_t uart_timer_info;
     uart_config_t config;
 
 	QUEUE_TYPE data;
+
+	output_waveform.active    = false;
+	output_waveform.state     = 0;
+	output_waveform.output    = 1;
+	output_waveform.uart_data = 0;
 
     BOARD_InitBootPins();
     BOARD_InitBootClocks();
     BOARD_InitDebugConsole();
 
-    queue_init(&tx_rx_queue);
+    queue_init(&tx_queue);
+    queue_init(&rx_queue);
 
     UART_GetDefaultConfig(&config);
     config.baudRate_Bps = BOARD_DEBUG_UART_BAUDRATE;
@@ -278,6 +376,16 @@ int main(void)
     FTM_EnableInterrupts(DAC_FTM_BASEADDR, kFTM_TimeOverflowInterruptEnable);
     EnableIRQ(DAC_FTM_IRQ_NUM);
 
+    // setup uart timer
+    FTM_GetDefaultConfig(&uart_timer_info);
+    // Divide FTM clock by 4
+    uart_timer_info.prescale = kFTM_Prescale_Divide_4;
+    // Initialize FTM module
+    FTM_Init(UART_TIMER_FTM_BASEADDR, &uart_timer_info);
+    // Set timer period
+    FTM_EnableInterrupts(UART_TIMER_FTM_BASEADDR, kFTM_TimeOverflowInterruptEnable);
+    EnableIRQ(UART_TIMER_FTM_IRQ_NUM);
+
     // setup cmp pulse width timer
     FTM_GetDefaultConfig(&cmp_pulsewidth_info);
     // Divide FTM clock by 4
@@ -311,15 +419,21 @@ int main(void)
     	static QUEUE_TYPE data;
         if (done == true)
         {
-            if (queue_empty(&tx_rx_queue) == false)
+            if (queue_empty(&tx_queue) == false)
             {
-            	queue_dequeue(&tx_rx_queue, &data);
+            	queue_dequeue(&tx_queue, &data);
             	write_byte(data);
             }
             else
             {
             	write_1();	// let's send a stream of 1s between bytes...
             }
+        }
+
+        if (queue_empty(&rx_queue) == false)
+        {
+        	queue_dequeue(&rx_queue, &data);
+            UART_WriteByte(TX_UART, data);
         }
     }
 }
