@@ -158,7 +158,7 @@ int main(int argc, char **argv)
     unsigned long test_num = 0;
     unsigned long num_test_loop = 128;
 
-    int16_t i;
+    int16_t i, j;
     long unsigned int num_read;
     uint8_t out_char, in_char;
     uint8_t in_buff[16];
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
     }
 
     baudrate = 115200;
-    if (init_uart(&trn_uart, trn_portname, baudrate, TWOSTOPBITS) != 0)
+    if (init_uart(&trn_uart, trn_portname, baudrate, ONESTOPBIT) != 0)
     {
         printf("Error opening %s: %s\n", trn_portname, strerror(errno));
         return -1;
@@ -242,10 +242,10 @@ int main(int argc, char **argv)
 
     printf("Connected to transmitter port %s at baudrate %ld\n", trn_portname, baudrate);
 
+    baudrate = 300;
     if ((rcv_portname != NULL) && (test_num > 0))
     {
-        baudrate = 300;
-        if (init_uart(&rcv_uart, rcv_portname, baudrate, TWOSTOPBITS) != 0)
+        if (init_uart(&rcv_uart, rcv_portname, baudrate, ONESTOPBIT) != 0)
         {
             printf("Error opening %s: %s\n", rcv_portname, strerror(errno));
             return -1;
@@ -278,18 +278,14 @@ int main(int argc, char **argv)
                  if (verbose > 0)
                  {
                      in_buff[num_read] = '\0';
-                     printf("sent 0x%02x -> received %s", out_char, in_buff);
+                     printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
                      fflush(stdout);
                  }
-                 if ((in_buff[0] == '0') && (in_buff[1] == 'x'))
+                 if (out_char != in_buff[0])
                  {
-                     in_char = get_byte(&in_buff[2], 1);
-                     if (out_char != in_char)
-                     {
-                         error -= 1;
-                         printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_char);
-                         fflush(stdout);
-                     }
+                     error -= 1;
+                     printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
+                     fflush(stdout);
                  }
              }
              break;
@@ -303,18 +299,14 @@ int main(int argc, char **argv)
                      if (verbose > 0)
                      {
                          in_buff[num_read] = '\0';
-                         printf("sent 0x%02x -> received %s", out_char, in_buff);
+                         printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
                          fflush(stdout);
                      }
-                     if ((in_buff[0] == '0') && (in_buff[1] == 'x'))
+                     if (out_char != in_buff[0])
                      {
-                         in_char = get_byte(&in_buff[2], 1);
-                         if (out_char != in_char)
-                         {
-                             error -= 1;
-                             printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_char);
-                             fflush(stdout);
-                         }
+                         error -= 1;
+                         printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
+                         fflush(stdout);
                      }
                  }
              }
@@ -335,18 +327,14 @@ int main(int argc, char **argv)
                      if (verbose > 0)
                      {
                          in_buff[num_read] = '\0';
-                         printf("sent 0x%02x -> received %s", out_char, in_buff);
+                         printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
                          fflush(stdout);
                      }
-                     if ((in_buff[0] == '0') && (in_buff[1] == 'x'))
+                     if (out_char != in_buff[0])
                      {
-                         in_char = get_byte(&in_buff[2], 1);
-                         if (out_char != in_char)
-                         {
-                             error -= 1;
-                             printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_char);
-                             fflush(stdout);
-                         }
+                         error -= 1;
+                         printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
+                         fflush(stdout);
                      }
                  }
              }
@@ -358,24 +346,25 @@ int main(int argc, char **argv)
                      out_char = rand();
                      send_packet(trn_uart, &out_char, 1);
                      ReadFile(rcv_uart, in_buff, sizeof(in_buff), &num_read, NULL);
-                     if ((verbose > 0) && (num_read > 0))
+                     for (j = 0; j < num_read; j++)
                      {
-                         in_buff[num_read] = '\0';
-                         printf("sent 0x%02x -> received %s", out_char, in_buff);
-                         fflush(stdout);
-                     }
-                     else
-                     {
-                         error -= 1;
-                         printf("Error: Failure to read any data from receiver.\n");
-                     }
-                     if ((in_buff[0] == '0') && (in_buff[1] == 'x'))
-                     {
-                         in_char = get_byte(&in_buff[2], 1);
-                         if (out_char != in_char)
+                         if (num_read > 0)
+                         {
+                             if (verbose > 0)
+                             {
+                                 printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[j]);
+                                 fflush(stdout);
+                             }
+                         }
+                         else
                          {
                              error -= 1;
-                             printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_char);
+                             printf("Error: Failure to read any data from receiver.\n");
+                         }
+                         if (out_char != in_buff[j])
+                         {
+                             error -= 1;
+                             printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[j]);
                              fflush(stdout);
                          }
                      }
