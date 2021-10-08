@@ -153,12 +153,13 @@ int main(int argc, char **argv)
     char *trn_portname = NULL;
     char *rcv_portname = NULL;
 
-    unsigned long baudrate = 300;
+    unsigned long trn_baudrate = 115200;
+    unsigned long rcv_baudrate = 300;
     unsigned long help = 0;
     unsigned long test_num = 0;
     unsigned long num_test_loop = 128;
 
-    int16_t i;
+    int16_t i, j;
     long unsigned int num_read;
     uint8_t out_char, in_char;
     uint8_t in_buff[16];
@@ -174,9 +175,13 @@ int main(int argc, char **argv)
         {
             rcv_portname = argv[++i];
         }
-        else if (strcmp(argv[i], "-b") == 0)
+        else if (strcmp(argv[i], "-bt") == 0)
         {
-            baudrate = atol(argv[++i]);
+            trn_baudrate = atol(argv[++i]);
+        }
+        else if (strcmp(argv[i], "-br") == 0)
+        {
+            rcv_baudrate = atol(argv[++i]);
         }
         else if (strcmp(argv[i], "-t") == 0)
         {
@@ -201,18 +206,19 @@ int main(int argc, char **argv)
         }
     }
 
-    if ((help == 1) || (trn_portname == NULL) || ((rcv_portname == NULL) && (test_num > 0)))
+    if ((help == 1) || (trn_portname == NULL))
     {
         int result = 0;
-        printf("usage: test-bit-boffer [-h] -i COMPORT [-o COMPORT] [-b BAUDRATE] [-t TESTNUM] [-n LOOPNUM]\n\n");
+        printf("usage: test-bit-boffer [-h] -i COMPORT [-o COMPORT] [-bt BAUDRATE] [-br BAUDRATE] [-t TESTNUM] [-n LOOPNUM]\n\n");
         if (help == 1)
         {
             printf("arguments:\n");
             printf("  -h             Show this help message and exit.\n");
-            printf("  -i COMPORT     Transmitter COM Port.\n");
-            printf("  -o COMPORT     Receiver COM Port when TESTNUM > 0.\n");
-            printf("  -b BAUDRATE    Desired baudrate, default: 300.\n");
-            printf("  -t TESTNUM     Desired test to be executed.\n");
+            printf("  -i  COMPORT    Transmitter COM Port.\n");
+            printf("  -o  COMPORT    Receiver COM Port when TESTNUM > 0.\n");
+            printf("  -bt BAUDRATE   Transmitter baudrate, default: 115200.\n");
+            printf("  -br BAUDRATE   Receiver baudrate, default: 300.\n");
+            printf("  -t  TESTNUM    Desired test to be executed.\n");
             printf("                 0: Generate a count from 0x00 to 0xff and send to transmitter.\n");
             printf("                    Connect a uart terminal window to receiver's com port.\n");
             printf("                 1: Generate a count from 0x00 to 0xff, send to transmitter\n");
@@ -233,25 +239,27 @@ int main(int argc, char **argv)
         return result;
     }
 
-    baudrate = 115200;
-    if (init_uart(&trn_uart, trn_portname, baudrate, TWOSTOPBITS) != 0)
+    if (init_uart(&trn_uart, trn_portname, trn_baudrate, ONESTOPBIT) != 0)
     {
         printf("Error opening %s: %s\n", trn_portname, strerror(errno));
         return -1;
     }
 
-    printf("Connected to transmitter port %s at baudrate %ld\n", trn_portname, baudrate);
+    printf("Connected to transmitter port %s at baudrate %ld\n", trn_portname, trn_baudrate);
 
-    if ((rcv_portname != NULL) && (test_num > 0))
+    if (rcv_portname == NULL)
     {
-        baudrate = 300;
-        if (init_uart(&rcv_uart, rcv_portname, baudrate, TWOSTOPBITS) != 0)
+        rcv_uart = trn_uart;
+    }
+    else if ((rcv_portname != NULL) && (test_num > 0))
+    {
+        if (init_uart(&rcv_uart, rcv_portname, rcv_baudrate, ONESTOPBIT) != 0)
         {
             printf("Error opening %s: %s\n", rcv_portname, strerror(errno));
             return -1;
         }
 
-        printf("Connected to receiver port %s at baudrate %ld\n", rcv_portname, baudrate);
+        printf("Connected to receiver port %s at baudrate %ld\n", rcv_portname, rcv_baudrate);
     }
 
     fflush(stdout);
@@ -278,18 +286,14 @@ int main(int argc, char **argv)
                  if (verbose > 0)
                  {
                      in_buff[num_read] = '\0';
-                     printf("sent 0x%02x -> received %s", out_char, in_buff);
+                     printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
                      fflush(stdout);
                  }
-                 if ((in_buff[0] == '0') && (in_buff[1] == 'x'))
+                 if (out_char != in_buff[0])
                  {
-                     in_char = get_byte(&in_buff[2], 1);
-                     if (out_char != in_char)
-                     {
-                         error -= 1;
-                         printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_char);
-                         fflush(stdout);
-                     }
+                     error -= 1;
+                     printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
+                     fflush(stdout);
                  }
              }
              break;
@@ -303,18 +307,14 @@ int main(int argc, char **argv)
                      if (verbose > 0)
                      {
                          in_buff[num_read] = '\0';
-                         printf("sent 0x%02x -> received %s", out_char, in_buff);
+                         printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
                          fflush(stdout);
                      }
-                     if ((in_buff[0] == '0') && (in_buff[1] == 'x'))
+                     if (out_char != in_buff[0])
                      {
-                         in_char = get_byte(&in_buff[2], 1);
-                         if (out_char != in_char)
-                         {
-                             error -= 1;
-                             printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_char);
-                             fflush(stdout);
-                         }
+                         error -= 1;
+                         printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
+                         fflush(stdout);
                      }
                  }
              }
@@ -335,18 +335,14 @@ int main(int argc, char **argv)
                      if (verbose > 0)
                      {
                          in_buff[num_read] = '\0';
-                         printf("sent 0x%02x -> received %s", out_char, in_buff);
+                         printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
                          fflush(stdout);
                      }
-                     if ((in_buff[0] == '0') && (in_buff[1] == 'x'))
+                     if (out_char != in_buff[0])
                      {
-                         in_char = get_byte(&in_buff[2], 1);
-                         if (out_char != in_char)
-                         {
-                             error -= 1;
-                             printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_char);
-                             fflush(stdout);
-                         }
+                         error -= 1;
+                         printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
+                         fflush(stdout);
                      }
                  }
              }
@@ -358,24 +354,25 @@ int main(int argc, char **argv)
                      out_char = rand();
                      send_packet(trn_uart, &out_char, 1);
                      ReadFile(rcv_uart, in_buff, sizeof(in_buff), &num_read, NULL);
-                     if ((verbose > 0) && (num_read > 0))
+                     for (j = 0; j < num_read; j++)
                      {
-                         in_buff[num_read] = '\0';
-                         printf("sent 0x%02x -> received %s", out_char, in_buff);
-                         fflush(stdout);
-                     }
-                     else
-                     {
-                         error -= 1;
-                         printf("Error: Failure to read any data from receiver.\n");
-                     }
-                     if ((in_buff[0] == '0') && (in_buff[1] == 'x'))
-                     {
-                         in_char = get_byte(&in_buff[2], 1);
-                         if (out_char != in_char)
+                         if (num_read > 0)
+                         {
+                             if (verbose > 0)
+                             {
+                                 printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[j]);
+                                 fflush(stdout);
+                             }
+                         }
+                         else
                          {
                              error -= 1;
-                             printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_char);
+                             printf("Error: Failure to read any data from receiver.\n");
+                         }
+                         if (out_char != in_buff[j])
+                         {
+                             error -= 1;
+                             printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[j]);
                              fflush(stdout);
                          }
                      }
