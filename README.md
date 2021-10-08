@@ -15,9 +15,7 @@ Once I have everything tested, I'll connect it to my MEK6802D5 to test it's func
 
 test_cassette_interface
 ---
-```
-NOTE: I modified my bit-boffer test program to work with the FRDM-K64F board.  My design with the bit-boffer required two Teensy boards with both boards running at 300 baud.  This design requires just a single FRDM-K64F with the com port running at 115200 baud.  It is still possible to test the decoded uart signal coming from the MEK6802D5 by connecting a Teensy's RX pin to pin J1[1] on the FRDM-K64F board.  But I use this mode just for testing.  
- ```
+NOTE: I modified my bit-boffer test program to work with the FRDM-K64F board.  My design with the bit-boffer required two Teensy boards with both boards running at 300 baud.  This design requires just a single FRDM-K64F with the com port running at 115200 baud.  It is still possible to test the decoded uart signal coming from the MEK6802D5 by connecting a Teensy's RX pin to pin J1[1] on the FRDM-K64F board.  But I use this mode just for testing.
 
 The test_cassette_interface application program runs on a Widows host and can be built using gcc.
 
