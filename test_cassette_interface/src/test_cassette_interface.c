@@ -153,7 +153,8 @@ int main(int argc, char **argv)
     char *trn_portname = NULL;
     char *rcv_portname = NULL;
 
-    unsigned long baudrate = 300;
+    unsigned long trn_baudrate = 115200;
+    unsigned long rcv_baudrate = 300;
     unsigned long help = 0;
     unsigned long test_num = 0;
     unsigned long num_test_loop = 128;
@@ -174,9 +175,13 @@ int main(int argc, char **argv)
         {
             rcv_portname = argv[++i];
         }
-        else if (strcmp(argv[i], "-b") == 0)
+        else if (strcmp(argv[i], "-bt") == 0)
         {
-            baudrate = atol(argv[++i]);
+            trn_baudrate = atol(argv[++i]);
+        }
+        else if (strcmp(argv[i], "-br") == 0)
+        {
+            rcv_baudrate = atol(argv[++i]);
         }
         else if (strcmp(argv[i], "-t") == 0)
         {
@@ -201,18 +206,19 @@ int main(int argc, char **argv)
         }
     }
 
-    if ((help == 1) || (trn_portname == NULL) || ((rcv_portname == NULL) && (test_num > 0)))
+    if ((help == 1) || (trn_portname == NULL))
     {
         int result = 0;
-        printf("usage: test-bit-boffer [-h] -i COMPORT [-o COMPORT] [-b BAUDRATE] [-t TESTNUM] [-n LOOPNUM]\n\n");
+        printf("usage: test-bit-boffer [-h] -i COMPORT [-o COMPORT] [-bt BAUDRATE] [-br BAUDRATE] [-t TESTNUM] [-n LOOPNUM]\n\n");
         if (help == 1)
         {
             printf("arguments:\n");
             printf("  -h             Show this help message and exit.\n");
-            printf("  -i COMPORT     Transmitter COM Port.\n");
-            printf("  -o COMPORT     Receiver COM Port when TESTNUM > 0.\n");
-            printf("  -b BAUDRATE    Desired baudrate, default: 300.\n");
-            printf("  -t TESTNUM     Desired test to be executed.\n");
+            printf("  -i  COMPORT    Transmitter COM Port.\n");
+            printf("  -o  COMPORT    Receiver COM Port when TESTNUM > 0.\n");
+            printf("  -bt BAUDRATE   Transmitter baudrate, default: 115200.\n");
+            printf("  -br BAUDRATE   Receiver baudrate, default: 300.\n");
+            printf("  -t  TESTNUM    Desired test to be executed.\n");
             printf("                 0: Generate a count from 0x00 to 0xff and send to transmitter.\n");
             printf("                    Connect a uart terminal window to receiver's com port.\n");
             printf("                 1: Generate a count from 0x00 to 0xff, send to transmitter\n");
@@ -233,25 +239,27 @@ int main(int argc, char **argv)
         return result;
     }
 
-    baudrate = 115200;
-    if (init_uart(&trn_uart, trn_portname, baudrate, ONESTOPBIT) != 0)
+    if (init_uart(&trn_uart, trn_portname, trn_baudrate, ONESTOPBIT) != 0)
     {
         printf("Error opening %s: %s\n", trn_portname, strerror(errno));
         return -1;
     }
 
-    printf("Connected to transmitter port %s at baudrate %ld\n", trn_portname, baudrate);
+    printf("Connected to transmitter port %s at baudrate %ld\n", trn_portname, trn_baudrate);
 
-    baudrate = 300;
-    if ((rcv_portname != NULL) && (test_num > 0))
+    if (rcv_portname == NULL)
     {
-        if (init_uart(&rcv_uart, rcv_portname, baudrate, ONESTOPBIT) != 0)
+        rcv_uart = trn_uart;
+    }
+    else if ((rcv_portname != NULL) && (test_num > 0))
+    {
+        if (init_uart(&rcv_uart, rcv_portname, rcv_baudrate, ONESTOPBIT) != 0)
         {
             printf("Error opening %s: %s\n", rcv_portname, strerror(errno));
             return -1;
         }
 
-        printf("Connected to receiver port %s at baudrate %ld\n", rcv_portname, baudrate);
+        printf("Connected to receiver port %s at baudrate %ld\n", rcv_portname, rcv_baudrate);
     }
 
     fflush(stdout);
