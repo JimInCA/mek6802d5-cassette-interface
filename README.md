@@ -3,7 +3,7 @@
 
 The intent of this project is to emulate the cassette interface for the Motorola MEK6802D5 Development Board using modern technology.  
 
-The MEK6802D5 has the ability to save it's current contents in memory to an external cassette tape driver.  It also has the ability to load a program saved on a cassette tape driver to it's internal memory.  The intent of this project is to replace the cassette tape drive with the NXP FRDM-K64F Development Board.
+The MEK6802D5 has the ability to save it's current contents in memory to an external cassette tape drive.  It also has the ability to load a program saved on a cassette tape drive to it's internal memory.  The intent of this project is to replace the cassette tape drive with the NXP FRDM-K64F Development Board.
 
 I originally implemented a cassette interface for the MEK6802D5 using a circuit called the bit-boffer which uses 1970's vintage technology.  The bit-boffer was a lot of fun to build and it worked perfectly.  But it is quite cumbersome requiring two solderless breadboards, eight ICs, two Teensy development boards, and countless discreet components and wires.  So I decided to duplicate the functionally of the bit-boffer but using modern technology.  I decided to use the NXP FRDM-K64F board because it has a DAC that I can use to implement the transmitter and a comparator that I can use to implement the receiver.  I also just happened to have one of these boards in my vast collection of prototype/development boards, so the decision to use this was simple.  You can find my original project at [Cassette Tape Emulator](https://github.com/JimInCA/cassette-tape-emulator).
 
