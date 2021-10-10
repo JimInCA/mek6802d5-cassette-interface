@@ -134,7 +134,6 @@ void DAC_FTM_HANDLER(void)
         if (cycle_count == num_cycles)
         {
         	cycle_count = 0;
-        	//DAC_SetBufferValue(DEMO_DAC_BASEADDR, 0U, 0U);
         	FTM_StopTimer(DAC_FTM_BASEADDR);
         	done = true;
         }
@@ -150,29 +149,24 @@ void DAC_FTM_HANDLER(void)
 
 void load_dac_from_array(void)
 {
+    done = false;
 	FTM_StartTimer(DAC_FTM_BASEADDR, kFTM_SystemClock);
-	//trigger_scope();
-	while (!done) ;
+	while (!done);
 }
 
 void write_1 (void)
 {
 	num_cycles = 8;
     FTM_SetTimerPeriod(DAC_FTM_BASEADDR, STEP_DELAY);	// base clock is 60MHz
-    done = false;
 	load_dac_from_array();
-	while (!done) ;
 }
 
 void write_0 (void)
 {
 	num_cycles = 4;
     FTM_SetTimerPeriod(DAC_FTM_BASEADDR, STEP_DELAY*2);	// base clock is 60MHz
-    done = false;
 	load_dac_from_array();
-	while (!done) ;
 }
-
 
 void write_byte(uint8_t data_byte)
 {
@@ -203,33 +197,16 @@ void UART_TIMER_FTM_HANDLER(void)
     FTM_ClearStatusFlags(UART_TIMER_FTM_BASEADDR, kFTM_TimeOverflowFlag);
     FTM_StopTimer(UART_TIMER_FTM_BASEADDR);
 
-    //uart_state = output_waveform.output;	// Kludge!  Can't seem to read output pin!
     uart_state = GPIO_PinRead(BOARD_CMP0_UART_TX_GPIO, BOARD_CMP0_UART_TX_PIN);
-
 	uart_mask = (0x0001 << output_waveform.state);
-
-    switch (output_waveform.state)
-    {
-    case  0: uart_mask = 0x0001; break; // start bit
-    case  1: uart_mask = 0x0002; break; // D0 bit
-    case  2: uart_mask = 0x0004; break; // D1 bit
-    case  3: uart_mask = 0x0008; break; // D2 bit
-    case  4: uart_mask = 0x0010; break; // D3 bit
-    case  5: uart_mask = 0x0020; break; // D4 bit
-    case  6: uart_mask = 0x0040; break; // D5 bit
-    case  7: uart_mask = 0x0080; break; // D6 bit
-    case  8: uart_mask = 0x0100; break; // D7 bit
-    case  9: uart_mask = 0x0200; break; // stop bit 1
-    case 10: uart_mask = 0x0400; break; // stop bit 2
-    };
 
     if (uart_state > 0)
     {
-        output_waveform.uart_data |= uart_mask;
+        output_waveform.uart_data |= uart_mask;   // set data bit
     }
     else
     {
-    	output_waveform.uart_data &= ~uart_mask;
+    	output_waveform.uart_data &= ~uart_mask;  // clear data bit
     };
 
     if (output_waveform.state++ < 10)
@@ -243,7 +220,7 @@ void UART_TIMER_FTM_HANDLER(void)
 
         FTM_StopTimer(UART_TIMER_FTM_BASEADDR);
 
-        data = ((output_waveform.uart_data >> 1) & 0x000000ff);
+        data = (QUEUE_TYPE) ((output_waveform.uart_data >> 1) & 0x000000ff);
         if (queue_enqueue(&rx_queue, data) == false)
         	UART_WriteBlocking(TX_UART, "\r\nFailure in queue_enqueue()\r\n", 30);
 
@@ -301,10 +278,6 @@ void CMP0_IRQHANDLER(void)
 		{
 			GPIO_PortSet(BOARD_CMP0_UART_TX_GPIO, 1u << BOARD_CMP0_UART_TX_PIN);
 			output_waveform.output = 1;
-			if (output_waveform.active == true)
-			{
-				output_waveform.output = 1;
-			}
 		}
     }
     SDK_ISR_EXIT_BARRIER;
