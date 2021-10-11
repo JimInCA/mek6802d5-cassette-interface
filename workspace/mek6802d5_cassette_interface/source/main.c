@@ -50,7 +50,7 @@
 #define FTM_SOURCE_CLOCK (CLOCK_GetFreq(kCLOCK_BusClk) / 1)
 
 // dac timer step delay
-#define STEP_DELAY 781	// base clock is 60MHz
+#define STEP_DELAY 760	// base clock is 60MHz
 
 /* Transmitter UART instance and clock */
 #define TX_UART            UART0
