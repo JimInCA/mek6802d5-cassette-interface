@@ -60,7 +60,7 @@ To get around the issue of the UART not supporting 300 baud, I had to add my own
 
 Once the eight data bits are resolved, the code places the byte on an output queue and returns.  The main loops looks at this queue (as well as the transmitter queue) and if there is any data available, it sends the data to the host.
 
-The input to the receiver's comparator is on signal COMP0_IN1 on pin J1[13].  This input needs to be connected to the "MIC' output on P2 on the D5.  For set up and debugging, you can use a scope to monitor the comparator's output on board pin J1[15] to verify the 50-50 duty cycle.  The decoded uart signal at 300 baud is also presented on the board's J1[1] pin.  If you like, you can send this signal to an external UART.  I like using the Teensy myself.  Just remember that the other device must be 3.3V compatible and that the UART must be set to 300 baud and two stop bits.  
+The input to the receiver's comparator is on signal CMP0_IN1 on pin J1[13].  This input needs to be connected to the "MIC' output on P2 on the D5.  For set up and debugging, you can use a scope to monitor the comparator's output on board pin J1[15] to verify the 50-50 duty cycle.  The decoded uart signal at 300 baud is also presented on the board's J1[1] pin.  If you like, you can send this signal to an external UART.  I like using the Teensy myself.  Just remember that the other device must be 3.3V compatible and that the UART must be set to 300 baud and two stop bits.  
 
 ---
 ## Testing
@@ -122,7 +122,29 @@ Test 5 Passed!
 ---
 ## mek6802d5-loader
 ---
+mek6802d5-loader is the application that you'll need to run to load code into the D5's ram.  It too can be built with either gcc or Visual Studio.
 
-TBD
+mek6802d5-loader's help menu lists the usage and arguments for the application as shown below: 
+
+```
+$ ./bin/mek6802d5-loader.exe -h
+usage: mek6802d5-loader [-h] -f FILE -p COMPORT [-b BAUDRATE] [-c NUMMARKS]
+
+arguments:
+  -h             Show this help message and exit.
+  -f FILE        Filename of S-Record input file.
+  -p COMPORT     COM Port to which the device is connected.
+  -b BAUDRATE    Desired baud rate, default: 115200.
+  -c NUMMARKS    Number of marker cycles. default: 819.
+```
+
+The expected output from running mek6802d5-loader should look like the following example.
+
+```
+$ ./bin/mek6802d5-loader.exe -f ./test/used5.s19 -p COM20 -b 115200 -c 1024
+Successfully connected to UART on port COM20 at baud rate 115200.
+DCB is ready for use.
+Sending file ./test/used5.s19 to port COM20 at baud rate 115200
+```
 
 That's it for now and most of all, have fun with all of your projects.
