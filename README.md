@@ -60,13 +60,7 @@ To get around the issue of the UART not supporting 300 baud, I had to add my own
 
 Once the eight data bits are resolved, the code places the byte on an output queue and returns.  The main loops looks at this queue (as well as the transmitter queue) and if there is any data available, it sends the data to the host.
 
-The input to the receiver's comparator is on signal CMP0_IN1 on pin J1[13].  This input needs to be connected to the "MIC' output on P2 on the D5.  For set up and debugging, you can use a scope to monitor the comparator's output on board pin J1[15] to verify the 50-50 duty cycle.  The decoded uart signal at 300 baud is also presented on the board's J1[1] pin.  If you like, you can send this signal to an external UART.  I like using the Teensy myself.  Just remember that the other device must be 3.3V compatible and that the UART must be set to 300 baud and two stop bits.  
-
----
-## Testing
----
-
-Just as a quick note, you can test this design by connecting DAC0_OUT on pin J4[11] to CMP0_IN1 on pin J1[13].  You can then use the following test case and verify that everything is working prior to connecting the board to an actual MEK6802D5. 
+The input to the receiver's comparator is on signal CMP0_IN1 on pin J1[13].  This input needs to be connected to the "MIC" output on P2 on the D5.  For set up and debugging, you can use a scope to monitor the comparator's output on board pin J1[15] to verify the 50-50 duty cycle.  The decoded uart signal at 300 baud is also presented on the board's J1[1] pin.  If you like, you can send this signal to an external UART.  I like using the Teensy myself.  Just remember that the other device must be 3.3V compatible and that the UART must be set to 300 baud and two stop bits.  
 
 ---
 ## test_cassette_interface
@@ -147,4 +141,30 @@ DCB is ready for use.
 Sending file ./test/used5.s19 to port COM20 at baud rate 115200
 ```
 
+---
+## System Testing
+---
+
+Now it's time to connect the FRDM-K64F to the MEK6802D5 and see if this thing will actually work.  
+Here is a photo with everything connected together:
+
+![alt text](./images/final_example.jpg?raw=true "MEK6802D5 with FRDM-K64F")
+
+As you can see in the photo, I've soldered together two audio jacks that I've used to connect the D5's "EAR" and "MIC" connectors to the FRDM-F64K pins.  The jack on the "EAR" connector, P3, is connected to pin J4[11], DAC0_OUT.  The jack on the "MIC" connector, P2, is connected to pin J1[13], CMP0_IN1.  
+
+Once everything is connected and powered up, it's time to test out all of our work.  What I want to test first is to see if I can load a binary file into the D5's memory.  So on my host, I go to the ../mek6802d5-cassette-interface/mek6802d5-loader directory and execute the following command:
+
+```
+$ ./bin/mek6802d5-loader.exe -f ./test/help.s19 -p COM20 -b 115200 -c 1024
+Successfully connected to UART on port COM20 at baud rate 115200.
+DCB is ready for use.
+Sending file ./test/help.s19 to port COM20 at baud rate 115200
+```
+
+On the D5, I then press the RS button, followed by the FS button, and then the P/L button.  The display on the D5 should go blank for about a minute and then show a dash on the most left digit.  Then press 0 followed by GO and you should then see HELP-- displayed across all six digits on the D5.
+
+The only thing left is to test to see if we can save from the D5's memory to the host.  At this point, this feature is not working and to be truthful, I had the same issue with the bit-boffer.  It seems that there is a voltage divider network on the output of the D5 made up of two resistors, one being 4.7K ohms and the other one being 47 ohms.  The output from the D5 is the center tap between the two resisters.  This means if we have a clean 5V input signal, we only get a 50mV signal on the output, which isn't enough for either the bit-boffer or the FRDM-K64F to detect.  On the bit-boffer, I got around this by tapping into the signal before the voltage divider.  I will need to do something similar here with the FRDM-K64F.  I'll update this document when (and if) I resolve this issue.
+
+---
 That's it for now and most of all, have fun with all of your projects.
+
