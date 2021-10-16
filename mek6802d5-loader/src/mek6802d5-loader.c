@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#define DEFAULT_BAUD_RATE 115200
+
 unsigned long verbose = 0;
 
 HANDLE uart;
@@ -170,7 +172,7 @@ int main(int argc, char **argv)
     char *portname = NULL;
     char *file_name = NULL;
 
-    unsigned long baudrate = 115200;
+    unsigned long baudrate = DEFAULT_BAUD_RATE;
     unsigned long flowcontrol = 0;
     unsigned long help = 0;
     unsigned long header_char = 819;
@@ -200,7 +202,7 @@ int main(int argc, char **argv)
         }
         else if (strcmp(argv[i], "-v") == 0)
         {
-            verbose = atol(argv[++i]);
+            verbose = 1;
         }
         else if (strcmp(argv[i], "-c") == 0)
         {
@@ -220,15 +222,16 @@ int main(int argc, char **argv)
     if ((help == 1) || (file_name == NULL) || (portname == NULL))
     {
         int result = 0;
-        printf("usage: mek6802d5-loader [-h] -f FILE -p COMPORT [-b BAUDRATE] [-c NUMMARKS]\n\n");
+        printf("usage: mek6802d5-loader [-h] -f FILE -p COMPORT [-b BAUDRATE] [-c NUMMARKS] [-v]\n\n");
         if (help == 1)
         {
             printf("arguments:\n");
-            printf("  -h             Show this help message and exit.\n");
-            printf("  -f FILE        Filename of S-Record input file.\n");
-            printf("  -p COMPORT     COM Port to which the device is connected.\n");
-            printf("  -b BAUDRATE    Desired baud rate, default: %d.\n", baudrate);
-            printf("  -c NUMMARKS    Number of marker cycles. default: %d.\n", header_char);
+            printf("  -h           Show this help message and exit.\n");
+            printf("  -f FILE      Filename of S-Record input file.\n");
+            printf("  -p COMPORT   COM Port to which the device is connected.\n");
+            printf("  -b BAUDRATE  Desired baud rate, default: %d.\n", baudrate);
+            printf("  -c NUMMARKS  Number of marker cycles. default: %d.\n", header_char);
+            printf("  -v           Increase output verbosity.\n");
         }
         else
         {
@@ -424,9 +427,9 @@ int main(int argc, char **argv)
     {
         free(kcs.data);
     }
+*/
 
     fclose(fp);
-*/
     CloseHandle(uart);
 
     return 0;
