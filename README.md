@@ -122,17 +122,18 @@ mek6802d5-loader's help menu lists the usage and arguments for the application a
 
 ```
 $ ./bin/mek6802d5-loader.exe -h
-usage: mek6802d5-loader [-h] -f FILE -p COMPORT [-b BAUDRATE] [-c NUMMARKS]
+usage: mek6802d5-loader [-h] -f FILE -p COMPORT [-b BAUDRATE] [-c NUMMARKS] [-v]
 
 arguments:
-  -h             Show this help message and exit.
-  -f FILE        Filename of S-Record input file.
-  -p COMPORT     COM Port to which the device is connected.
-  -b BAUDRATE    Desired baud rate, default: 115200.
-  -c NUMMARKS    Number of marker cycles. default: 819.
+  -h           Show this help message and exit.
+  -f FILE      Filename of S-Record input file.
+  -p COMPORT   COM Port to which the device is connected.
+  -b BAUDRATE  Desired baud rate, default: 115200.
+  -c NUMMARKS  Number of marker cycles. default: 819.
+  -v           Increase output verbosity.
 ```
 
-The expected output from running mek6802d5-loader should look like the following example.
+To load a binary file into the D5's memory, you will first need to press the RS key on the D5's keypad to force the D5 back into it's boot monitor program.  The next step is to press the FS key followed by the P/L key on the D5's keypad.  This sets up the board to load data into it's memory.  You can then call mek6802d5-loader to load the binary into the D5's memory.  The expected output from running mek6802d5-loader should look like the following example.  
 
 ```
 $ ./bin/mek6802d5-loader.exe -f ./test/used5.s19 -p COM20 -b 115200 -c 1024
@@ -140,6 +141,108 @@ Successfully connected to UART on port COM20 at baud rate 115200.
 DCB is ready for use.
 Sending file ./test/used5.s19 to port COM20 at baud rate 115200
 ```
+
+When the load completes, it writes a dash to the first character of the six character display.  Depending on the size of the binary, this can take a minute or two.  Then all you need to do is press the 0 key followed by the G0 key on the D5's keypad to execute the program just loaded to the D5.
+
+---
+## mek6802d5-puncher
+---
+
+mek6802d5-puncher is an application that can be used to capture the data coming from the D5 when the punch command is executed to save a section of the D5's memory to tape.  
+
+mek6802d5-puncher's help menu lists the usage and arguments for the application as shown below: 
+
+```
+$ ./bin/mek6802d5-puncher.exe -h
+usage: mek6802d5-puncher [-h] [-f FILE] -p COMPORT [-b BAUDRATE] [-v]
+
+arguments:
+  -h           Show this help message and exit.
+  -f FILE      Output Filename.
+  -p COMPORT   COM Port.
+  -b BAUDRATE  Baud rate, default: 115200.
+  -v           Increase output verbosity.
+```
+
+To save the binary code that's in the D5's memory, you will need to first press the RS key on the D5's keypad to activate the D5's boot monitor (first character goes to a dash).  You will then press the P/L key and the board will prompt you for the begin address.  Enter the beginning address and then press the GO key.  The D5 will then prompt you for the end address.  Again, enter the ending address and press the GO key.  The D5 will immediately start to send a 30 second header consisting of just 0xff bytes.  This gives you time to enter the command for the mek6802d5-puncher program as shown below with the expected output:
+
+```
+./bin/mek6802d5-puncher.exe -f help_bytes.txt -p COM20 -b 115200
+Successfully connected to UART on port COM20 at baud rate 115200.
+Connected to port COM20 at baud rate 115200
+0x0000  0xce
+0x0001  0x76
+0x0002  0x79
+0x0003  0xff
+0x0004  0xe4
+0x0005  0x1d
+0x0006  0xce
+0x0007  0x38
+0x0008  0x73
+0x0009  0xff
+0x000a  0xe4
+0x000b  0x1f
+0x000c  0xce
+0x000d  0x40
+0x000e  0x40
+0x000f  0xff
+0x0010  0xe4
+0x0011  0x21
+0x0012  0xce
+0x0013  0xf0
+0x0014  0xa2
+0x0015  0xff
+0x0016  0xe4
+0x0017  0x19
+0x0018  0x7e
+0x0019  0xf0
+0x001a  0xbb
+```
+
+If you include the -v option with the program execution, the output will include the Block Start Character, 0x53 ('S'), the start and end address, along with the checksum.  The output with the -v option is shown below:
+
+```
+Successfully connected to UART on port COM20 at baud rate 115200.
+Connected to port COM20 at baud rate 115200
+Opened output file: help_bytes.txt
+Reading Leader Characters
+Checksum passed: 0x00
+        0x53
+        0x00
+        0x00
+        0x00
+        0x1a
+0x0000  0xce
+0x0001  0x76
+0x0002  0x79
+0x0003  0xff
+0x0004  0xe4
+0x0005  0x1d
+0x0006  0xce
+0x0007  0x38
+0x0008  0x73
+0x0009  0xff
+0x000a  0xe4
+0x000b  0x1f
+0x000c  0xce
+0x000d  0x40
+0x000e  0x40
+0x000f  0xff
+0x0010  0xe4
+0x0011  0x21
+0x0012  0xce
+0x0013  0xf0
+0x0014  0xa2
+0x0015  0xff
+0x0016  0xe4
+0x0017  0x19
+0x0018  0x7e
+0x0019  0xf0
+0x001a  0xbb
+        0xd7
+```
+
+As noted in the help menu, you can have the mek6802d5-puncher program save the data to a specified file. 
 
 ---
 ## System Testing
@@ -163,9 +266,17 @@ Sending file ./test/help.s19 to port COM20 at baud rate 115200
 
 On the D5, I then press the RS button, followed by the FS button, and then the P/L button.  The display on the D5 should go blank for about a minute and then show a dash on the most left digit.  Then press 0 followed by GO and you should then see HELP-- displayed across all six digits on the D5.
 
-The only thing left is to test to see if we can save from the D5's memory to the host.  At this point, this feature is not working and to be truthful, I had the same issue with the bit-boffer.  It seems that there is a voltage divider network on the output of the D5 made up of two resistors, one being 4.7K ohms and the other one being 47 ohms.  The output from the D5 is the center tap between the two resisters.  This means if we have a clean 5V input signal, we only get a 50mV signal on the output, which isn't enough for either the bit-boffer or the FRDM-K64F to detect.  
+The only thing left is to test to see if we can save from the D5's memory to the host.  
 
-On the bit-boffer, I got around the issue of the receiver not working by tapping into the signal before the voltage divider (U28E, pin 10) and then sending this signal to an AC coupled filter circuit.  I built the filter circuit identical to one on the D5 with the exception that I replaced the 47 ohm resister with a 470 ohm resister.  This seemed to work on the bit-boffer but I'm not sure if it will work as well on the FRDM-K64F.  I might need to adjust the 6-bit dac value to get a good signal out from CMP0.  I'll update this document when (and if) I decide to resolve this issue.  But at this point, I can assemble and load a program using the transmitter and that's what I really need to work and it works perfectly.  So use at your own discretion.
+NOTE:
+
+At this point, this feature is not working and to be truthful, I had the same issue with the bit-boffer.  For the tape output, the D5 uses a voltage divider network with a 4.7K ohm resister in series with a 47 ohm resistor with the output being the center tap between the two resisters.  This means if we have a clean 5V input signal, we only get a 50mV signal on the output. The amplitude of the output signal isn't enough for the FRDM-K64F to detect.  To get around this issue, I decided to tap into the output data stream on the D5 and construct my own filter circuit as defined in the image below:
+
+![alt text](./images//MEK6802D5-Tape-Output.jpg?raw=true "MEK6802D5 Tape Output")
+
+I taped into the signal after C32, the AC isolation capacitor and prior to R9, the top of the voltage divider.  I then ran this signal through my own isolation capacitor, just to be save, to the center tap of a pair of 2.2K ohm resistors.  The resistors set up a mid point biasing voltage between Vcc and Vee (3.3V and gnd).  I then ran this signal into the CMP0_IN1 pin, J1[13] on the FRDM-K64F.  With the biasing voltage being at the mid point, I needed to adjust up the voltage on the 6-bit DAC to the complement input to CMP0, the comparator.  I could have just as easily adjusted the values to the pair of 2.2K resistors to reduce the voltage to something slightly below the mid point, but adjusting the voltage was the simpler of the two options.  
+
+With is modification, the punch command worked perfectly, as shown above in the description of the puncher application.  Now I could have modified the tape output circuit on the D5, but with this board being over forty years old, I felt that this was the safer option, even though it goes against my original concept of having a single board solution.
 
 ---
 That's it for now and most of all, have fun with all of your projects.

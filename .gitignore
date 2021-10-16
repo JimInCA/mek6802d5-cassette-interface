@@ -5,6 +5,7 @@ USB2UART_Bridge/
 Debug/
 Release/
 *.launch
+*.txt
 */obj
 */bin
 */x64
