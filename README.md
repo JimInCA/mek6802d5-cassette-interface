@@ -73,15 +73,18 @@ The test_cassette_interface application program runs on a Widows host and can be
 test_cassette_interface's help menu lists the usage and arguments for the application as shown below.
 
 ```
-$ ./bin/test_cassette_interface.exe -h
+./bin/test_cassette_interface.exe -h
 usage: test-bit-boffer [-h] -i COMPORT [-o COMPORT] [-bt BAUDRATE] [-br BAUDRATE] [-t TESTNUM] [-n LOOPNUM] [-v]
 
 arguments:
   -h             Show this help message and exit.
   -i  COMPORT    Transmitter COM Port.
   -o  COMPORT    Receiver COM Port when TESTNUM > 0.
+                 Only define receiver com port when using a separate device
+                 to test the DECODED_UART output on pin J1[1].
   -bt BAUDRATE   Transmitter baud rate, default: 115200.
   -br BAUDRATE   Receiver baud rate, default: 300.
+                 Only valid when -o COMPORT is defined, ignored otherwise.
   -t  TESTNUM    Desired test to be executed.
                  0: Generate a count from 0x00 to 0xff and send to transmitter.
                     Connect a uart terminal window to receiver's com port.

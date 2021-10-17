@@ -23,6 +23,9 @@
 #include <stdint.h>
 #include <time.h>
 
+#define DEFAULT_TRN_BAUDRATE 115200
+#define DEFAULT_RCV_BAUDRATE 300
+
 unsigned long verbose = 0;
 
 HANDLE trn_uart;
@@ -153,8 +156,8 @@ int main(int argc, char **argv)
     char *trn_portname = NULL;
     char *rcv_portname = NULL;
 
-    unsigned long trn_baudrate = 115200;
-    unsigned long rcv_baudrate = 300;
+    unsigned long trn_baudrate = DEFAULT_TRN_BAUDRATE;
+    unsigned long rcv_baudrate = DEFAULT_RCV_BAUDRATE;
     unsigned long help = 0;
     unsigned long test_num = 0;
     unsigned long num_test_loop = 128;
@@ -216,8 +219,11 @@ int main(int argc, char **argv)
             printf("  -h             Show this help message and exit.\n");
             printf("  -i  COMPORT    Transmitter COM Port.\n");
             printf("  -o  COMPORT    Receiver COM Port when TESTNUM > 0.\n");
-            printf("  -bt BAUDRATE   Transmitter baud rate, default: 115200.\n");
-            printf("  -br BAUDRATE   Receiver baud rate, default: 300.\n");
+            printf("                 Only define receiver com port when using a separate device\n");
+            printf("                 to test the DECODED_UART output on pin J1[1].\n");
+            printf("  -bt BAUDRATE   Transmitter baud rate, default: %d.\n", DEFAULT_TRN_BAUDRATE);
+            printf("  -br BAUDRATE   Receiver baud rate, default: %d.\n", DEFAULT_RCV_BAUDRATE);
+            printf("                 Only valid when -o COMPORT is defined, ignored otherwise.\n");
             printf("  -t  TESTNUM    Desired test to be executed.\n");
             printf("                 0: Generate a count from 0x00 to 0xff and send to transmitter.\n");
             printf("                    Connect a uart terminal window to receiver's com port.\n");
