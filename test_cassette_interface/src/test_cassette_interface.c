@@ -193,7 +193,7 @@ int main(int argc, char **argv)
         }
         else if (strcmp(argv[i], "-v") == 0)
         {
-            verbose = atol(argv[++i]);
+            verbose = 1;
         }
         else if (strcmp(argv[i], "-h") == 0)
         {
@@ -209,7 +209,7 @@ int main(int argc, char **argv)
     if ((help == 1) || (trn_portname == NULL))
     {
         int result = 0;
-        printf("usage: test-bit-boffer [-h] -i COMPORT [-o COMPORT] [-bt BAUDRATE] [-br BAUDRATE] [-t TESTNUM] [-n LOOPNUM]\n\n");
+        printf("usage: test-bit-boffer [-h] -i COMPORT [-o COMPORT] [-bt BAUDRATE] [-br BAUDRATE] [-t TESTNUM] [-n LOOPNUM] [-v]\n\n");
         if (help == 1)
         {
             printf("arguments:\n");
@@ -229,6 +229,7 @@ int main(int argc, char **argv)
             printf("                 5: Generate 'n' number of random bytes, send to transmitter and\n");
             printf("                    verify on receiver.\n");
             printf("  -n LOOPNUM     Number of test cycles in test loop.\n");
+            printf("  -v             Increase output verbosity.\n");
         }
         else
         {

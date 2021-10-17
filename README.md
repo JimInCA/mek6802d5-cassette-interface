@@ -74,7 +74,7 @@ test_cassette_interface's help menu lists the usage and arguments for the applic
 
 ```
 $ ./bin/test_cassette_interface.exe -h
-usage: test-bit-boffer [-h] -i COMPORT [-o COMPORT] [-bt BAUDRATE] [-br BAUDRATE] [-t TESTNUM] [-n LOOPNUM]
+usage: test-bit-boffer [-h] -i COMPORT [-o COMPORT] [-bt BAUDRATE] [-br BAUDRATE] [-t TESTNUM] [-n LOOPNUM] [-v]
 
 arguments:
   -h             Show this help message and exit.
@@ -93,13 +93,14 @@ arguments:
                  5: Generate 'n' number of random bytes, send to transmitter and
                     verify on receiver.
   -n LOOPNUM     Number of test cycles in test loop.
+  -v             Increase output verbosity.
 ```
 
 All tests require that you connect the output of the transmitter directly to the input of the receiver (J4[11] to J1[13] as shown in the photo above).  This provides the ability for closed-loop testing.  
 
 An example execution of test_cassette_interface follows:
 ```
-$ ./bin/test_cassette_interface.exe -i COM20 -bt 115200 -t 5 -n 8 -v 1
+$ ./bin/test_cassette_interface.exe -i COM20 -bt 115200 -t 5 -n 8 -v
 Successfully connected to UART on port COM20 at baud rate 115200.
 Connected to transmitter port COM20 at baud rate 115200
 sent 0x90 -> received 0x90
@@ -274,9 +275,11 @@ At this point, this feature is not working and to be truthful, I had the same is
 
 ![alt text](./images//MEK6802D5-Tape-Output.jpg?raw=true "MEK6802D5 Tape Output")
 
-I taped into the signal after C32, the AC isolation capacitor and prior to R9, the top of the voltage divider.  I then ran this signal through my own isolation capacitor, just to be save, to the center tap of a pair of 2.2K ohm resistors.  The resistors set up a mid point biasing voltage between Vcc and Vee (3.3V and gnd).  I then ran this signal into the CMP0_IN1 pin, J1[13] on the FRDM-K64F.  With the biasing voltage being at the mid point, I needed to adjust up the voltage on the 6-bit DAC to the complement input to CMP0, the comparator.  I could have just as easily adjusted the values to the pair of 2.2K resistors to reduce the voltage to something slightly below the mid point, but adjusting the voltage was the simpler of the two options.  
+I taped into the signal after C32, the AC isolation capacitor and prior to R9, the top of the voltage divider.  I then ran this signal through my own isolation capacitor, just to be save, to the center tap of a pair of 2.2K ohm resistors.  The resistors set up a mid point biasing voltage between Vcc and Vee (3.3V and gnd).  I then ran this signal into the CMP0_IN1 pin, J1[13] on the FRDM-K64F.  With the biasing voltage being at the mid point, I needed to adjust up the voltage on the 6-bit DAC to the complement input to CMP0, the comparator.  I could have just as easily adjusted the values to the pair of 2.2K resistors to reduce the voltage to something slightly below the mid point, but adjusting the voltage was the simpler of the two options.  Replacing the lower resister with a 5K ohm multi-turn pot may be the best option if you care to go that way.
 
 I also had to modify the ISR routine for CMP0.  Instead of measuring the period between the rising edge and the falling edge, I had to measure the period between two consecutive rising edges to determine the period.  Determining the period is necessary in order to determine if we are receiving a one or a zero.  The reason why I originally went with half period is because of the inherent error induced by the difference in the period between a one and a zero.  With a half period, the error is reduced in half.  But it seems to work perfectly even with the increase in the error.
+
+Now what do I mean by the inherent error.  I'm measuring the period between consecutive rising edges.  After the measurement of the second edge, it can be determined if this is a period for a one or a period for a zero.  This means that I have a one period delay between when the period actually changes until the output will change (DECODED_UART, J1[1]).  With the periods between a one and a zero being different, this means that the delay for a one will be less than the delay for a zero (zero has twice the period of a one). There is a way to remove this error by requiring two one periods before changing the output; this would make the delay equal between a one and a zero, but it seems to be working with this inherent error, so I'm going to leave it alone for now.  It's just a potential issue that the user needs to be aware of in the future.
 
 With is modification, the punch command worked perfectly, as shown above in the description of the puncher application.  Now I could have modified the tape output circuit on the D5, but with this board being over forty years old, I felt that this was the safer option, even though it goes against my original concept of having a single board solution.
 
