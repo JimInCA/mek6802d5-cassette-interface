@@ -128,7 +128,7 @@ const cmp_config_t CMP0_config = {
 /* Configuration of the DAC sub-module, used in the CMP_SetDACConfig() function */
 const cmp_dac_config_t CMP0_dac_config = {
   .referenceVoltageSource = kCMP_VrefSourceVin2,
-  .DACValue = 31U
+  .DACValue = 46U
 };
 
 static void CMP0_init(void) {
@@ -143,7 +143,7 @@ static void CMP0_init(void) {
   /* Explicitly enables CMP periphery to satisfy glitch limitations. */
   CMP_Enable(CMP0_PERIPHERAL, true);
   /* Select edges which trigger interrupt or DMA transfer if selected */
-  CMP_EnableInterrupts(CMP0_PERIPHERAL, (kCMP_OutputRisingInterruptEnable | kCMP_OutputFallingInterruptEnable));
+  CMP_EnableInterrupts(CMP0_PERIPHERAL, kCMP_OutputRisingInterruptEnable);
   /* Enable interrupt CMP0_IRQn request in the NVIC. */
   EnableIRQ(CMP0_IRQN);
 }

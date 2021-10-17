@@ -240,29 +240,26 @@ volatile uint32_t g_CmpFlags = 0U;
 void CMP0_IRQHANDLER(void)
 {
 	static uint32_t rising_edge_count = 0;
-	static uint32_t falling_edge_count = 0;
+	static uint32_t prior_rising_edge_count = 0;
 	uint32_t pulse_width;
 
     g_CmpFlags = CMP_GetStatusFlags(CMP0_PERIPHERAL);
-    CMP_ClearStatusFlags(CMP0_PERIPHERAL, kCMP_OutputRisingEventFlag | kCMP_OutputFallingEventFlag);
+    CMP_ClearStatusFlags(CMP0_PERIPHERAL, kCMP_OutputRisingEventFlag);
     if (0U != (g_CmpFlags & kCMP_OutputRisingEventFlag))
     {
+    	prior_rising_edge_count = rising_edge_count;
         rising_edge_count = FTM_GetCurrentTimerCount(CMP_PULSEWIDTH_FTM_BASEADDR);
-    }
-    else if (0U != (g_CmpFlags & kCMP_OutputFallingEventFlag))
-    {
-        falling_edge_count = FTM_GetCurrentTimerCount(CMP_PULSEWIDTH_FTM_BASEADDR);
 
-        if (falling_edge_count > rising_edge_count)
+        if (rising_edge_count > prior_rising_edge_count)
         {
-        	pulse_width = falling_edge_count - rising_edge_count;
+        	pulse_width = rising_edge_count - prior_rising_edge_count;
         }
         else
         {
-        	pulse_width = falling_edge_count + (0xffff - rising_edge_count);
+        	pulse_width = rising_edge_count + (0xffff - prior_rising_edge_count);
         }
 
-		if (pulse_width > 18750)
+		if (pulse_width > (18750 * 2))
 		{
 			GPIO_PortClear(BOARD_CMP0_UART_TX_GPIO, 1u << BOARD_CMP0_UART_TX_PIN);
 			output_waveform.output = 0;
