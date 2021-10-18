@@ -257,6 +257,7 @@ int main(int argc, char **argv)
     if (rcv_portname == NULL)
     {
         rcv_uart = trn_uart;
+        printf("Connected to receiver port %s at baud rate %ld\n", trn_portname, trn_baudrate);
     }
     else if ((rcv_portname != NULL) && (test_num > 0))
     {
@@ -289,18 +290,32 @@ int main(int argc, char **argv)
              {
                  out_char = (uint8_t)i;
                  send_packet(trn_uart, &out_char, 1);
-                 ReadFile(rcv_uart, in_buff, sizeof(in_buff), &num_read, NULL);
-                 if (verbose > 0)
+                 j = 0;
+                 do 
                  {
-                     in_buff[num_read] = '\0';
-                     printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
-                     fflush(stdout);
+                    ReadFile(rcv_uart, in_buff, sizeof(in_buff), &num_read, NULL);
+                 } while ((num_read < 1) && (j++ < 5));
+                 if (num_read > 0)
+                 {
+                     if (out_char == in_buff[0])
+                     {
+                        if (verbose > 0)
+                        {
+                            printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
+                            fflush(stdout);
+                        }
+                     }
+                     else
+                     {
+                         error -= 1;
+                         printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
+                         fflush(stdout);
+                     }
                  }
-                 if (out_char != in_buff[0])
+                 else
                  {
+                     printf("Error: No data returned from receiver\n");
                      error -= 1;
-                     printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
-                     fflush(stdout);
                  }
              }
              break;
@@ -310,18 +325,32 @@ int main(int argc, char **argv)
                  for (i = 0; i < num_test_loop; i++)
                  {
                      send_packet(trn_uart, &out_char, 1);
-                     ReadFile(rcv_uart, in_buff, sizeof(in_buff), &num_read, NULL);
-                     if (verbose > 0)
+                     j = 0;
+                     do 
                      {
-                         in_buff[num_read] = '\0';
-                         printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
-                         fflush(stdout);
+                        ReadFile(rcv_uart, in_buff, sizeof(in_buff), &num_read, NULL);
+                     } while ((num_read < 1) && (j++ < 5));
+                     if (num_read > 0)
+                     {
+                         if (out_char == in_buff[0])
+                         {
+                            if (verbose > 0)
+                            {
+                                printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
+                                fflush(stdout);
+                            }
+                         }
+                         else
+                         {
+                             error -= 1;
+                             printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
+                             fflush(stdout);
+                         }
                      }
-                     if (out_char != in_buff[0])
+                     else
                      {
+                         printf("Error: No data returned from receiver\n");
                          error -= 1;
-                         printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
-                         fflush(stdout);
                      }
                  }
              }
@@ -338,18 +367,32 @@ int main(int argc, char **argv)
                  {
                      out_char = out_data[i];
                      send_packet(trn_uart, &out_char, 1);
-                     ReadFile(rcv_uart, in_buff, sizeof(in_buff), &num_read, NULL);
-                     if (verbose > 0)
+                     j = 0;
+                     do 
                      {
-                         in_buff[num_read] = '\0';
-                         printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
-                         fflush(stdout);
+                        ReadFile(rcv_uart, in_buff, sizeof(in_buff), &num_read, NULL);
+                     } while ((num_read < 1) && (j++ < 5));
+                     if (num_read > 0)
+                     {
+                         if (out_char == in_buff[0])
+                         {
+                             if (verbose > 0)
+                             {
+                                 printf("sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
+                                 fflush(stdout);
+                             }
+                         }
+                         else
+                         {
+                             error -= 1;
+                             printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
+                             fflush(stdout);
+                         }
                      }
-                     if (out_char != in_buff[0])
+                     else
                      {
+                         printf("Error: No data returned from receiver\n");
                          error -= 1;
-                         printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[0]);
-                         fflush(stdout);
                      }
                  }
              }
@@ -360,10 +403,14 @@ int main(int argc, char **argv)
                  {
                      out_char = rand();
                      send_packet(trn_uart, &out_char, 1);
-                     ReadFile(rcv_uart, in_buff, sizeof(in_buff), &num_read, NULL);
-                     for (j = 0; j < num_read; j++)
+                     j = 0;
+                     do 
                      {
-                         if (num_read > 0)
+                        ReadFile(rcv_uart, in_buff, sizeof(in_buff), &num_read, NULL);
+                     } while ((num_read < 1) && (j++ < 5));
+                     if (num_read > 0)
+                     {
+                         if (out_char == in_buff[j])
                          {
                              if (verbose > 0)
                              {
@@ -374,14 +421,14 @@ int main(int argc, char **argv)
                          else
                          {
                              error -= 1;
-                             printf("Error: Failure to read any data from receiver.\n");
-                         }
-                         if (out_char != in_buff[j])
-                         {
-                             error -= 1;
                              printf("Error: sent 0x%02x -> received 0x%02x\n", out_char, in_buff[j]);
                              fflush(stdout);
                          }
+                     }
+                     else
+                     {
+                         printf("Error: No data returned from receiver\n");
+                         error -= 1;
                      }
                  }
              }

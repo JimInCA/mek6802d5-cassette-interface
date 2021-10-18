@@ -71,6 +71,7 @@ An example execution of test_cassette_interface follows:
 $ ./bin/test_cassette_interface.exe -i COM20 -bt 115200 -t 5 -n 8
 Successfully connected to UART on port COM20 at baud rate 115200.
 Connected to transmitter port COM20 at baud rate 115200
+Connected to receiver port COM20 at baud rate 115200
 Test 5 Passed!
 ```
 
@@ -166,14 +167,15 @@ An example execution of test_cassette_interface follows:
 $ ./bin/test_cassette_interface.exe -i COM20 -bt 115200 -t 5 -n 8 -v
 Successfully connected to UART on port COM20 at baud rate 115200.
 Connected to transmitter port COM20 at baud rate 115200
-sent 0x90 -> received 0x90
+Connected to receiver port COM20 at baud rate 115200
 sent 0xd7 -> received 0xd7
-sent 0x72 -> received 0x72
-sent 0x80 -> received 0x80
-sent 0x27 -> received 0x27
+sent 0xf8 -> received 0xf8
 sent 0x6b -> received 0x6b
-sent 0xe8 -> received 0xe8
-sent 0xc7 -> received 0xc7
+sent 0xc0 -> received 0xc0
+sent 0x27 -> received 0x27
+sent 0x6d -> received 0x6d
+sent 0x15 -> received 0x15
+sent 0xdf -> received 0xdf
 Test 5 Passed!
 ```
 
