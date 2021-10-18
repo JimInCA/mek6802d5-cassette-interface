@@ -64,7 +64,7 @@ Once the firmware is loaded onto the FRDM-K64F, it's good practice to verify the
 
 ![alt text](./images/FRDM-K64F-Board.jpg?raw=true "MEK6802D5")
 
-The test_cassette_interface application program will be used to test the FRMD's firmware.  What the test program does is it writes data to the transmitter and then reads any data received on the receivers.  It then compares the data sent to the data received to determine of the test either passed or failed.  After the test completes, it reports the final results of the test.
+The test_cassette_interface application program will be used to test the FRMD's firmware.  What the test program does is it writes data to the transmitter and then reads any data received on the receiver.  It then compares the data sent to the data received to determine if the test either passed or failed.  After the test completes, it reports the final results of the test.
 
 An example execution of test_cassette_interface follows:
 ```
@@ -77,7 +77,7 @@ Test 5 Passed!
 
 A full description of test_cassette_interface is given later in this document.
 
-Once you are satisfied with the FRMD-K64F is working correctly, it's time to connect it to the D5 for full system testing.
+Once you are satisfied with that the FRMD-K64F is working correctly, it's time to connect it to the D5 for full system testing.
 
 ---
 ## MEK6802D5 System Testing
