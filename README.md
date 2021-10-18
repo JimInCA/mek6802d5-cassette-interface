@@ -1,17 +1,11 @@
 
-# Cassette Interface for the Motorola MEK6802D5
+# Cassette Tape Interface for the Motorola MEK6802D5
 
-The intent of this project is to emulate the cassette interface for the Motorola MEK6802D5 Development Board using modern technology.  
+The intent of this project is to emulate the cassette tape interface for the Motorola MEK6802D5 Development Board using modern technology.  
 
 The MEK6802D5 has the ability to save it's current contents in memory to an external cassette tape drive.  It also has the ability to load a program saved on a cassette tape drive to it's internal memory.  The intent of this project is to replace the cassette tape drive with the NXP FRDM-K64F Development Board.
 
-I originally implemented a cassette interface for the MEK6802D5 using a circuit called the bit-boffer which uses 1970's vintage technology.  The bit-boffer was a lot of fun to build and it worked perfectly.  But it is quite cumbersome requiring two solderless breadboards, eight ICs, two Teensy development boards, and countless discreet components and wires.  So I decided to duplicate the functionally of the bit-boffer but using modern technology.  I decided to use the NXP FRDM-K64F board because it has a DAC that I can use to implement the transmitter and a comparator that I can use to implement the receiver.  I also just happened to have one of these boards in my vast collection of prototype/development boards, so the decision to use this was simple.  You can find my original project at [Cassette Tape Emulator](https://github.com/JimInCA/cassette-tape-emulator).
-
-Here's a photo of my set-up for the FRDM-K64F board.  I have it working as a prototype where I'm wrapping the transmitter's output on pin J4[11], into the receiver's input in pin J1[13].  
-
-![alt text](./images/FRDM-K64F-Board.jpg?raw=true "MEK6802D5")
-
-Once I have everything tested, I'll connect it to my MEK6802D5 to test it's functionality in a real application.
+I originally implemented a cassette interface for the MEK6802D5 using a circuit called the bit-boffer which uses 1970's vintage technology.  The bit-boffer was a lot of fun to build and it worked perfectly.  But it is quite cumbersome requiring two solderless breadboards, eight ICs, two Teensy development boards, and countless discreet components and wires.  So I decided to duplicate the functionally of the bit-boffer but using modern technology.  I decided to use the NXP FRDM-K64F board because it has a DAC that I can use to implement the transmitter and a comparator that I can use to implement the receiver.  I also just happened to have one of these boards in my vast collection of prototype/development boards, so the decision to use this was simple.  You can find my original project that uses the bit-boffer at [Cassette Tape Emulator](https://github.com/JimInCA/cassette-tape-emulator).
 
 ---
 ## MEK6802D5 Cassette Interface
@@ -60,13 +54,79 @@ To get around the issue of the UART not supporting 300 baud, I had to add my own
 
 Once the eight data bits are resolved, the code places the byte on an output queue and returns.  The main loops looks at this queue (as well as the transmitter queue) and if there is any data available, it sends the data to the host.
 
-The input to the receiver's comparator is on signal CMP0_IN1 on pin J1[13].  This input needs to be connected to the "MIC" output on P2 on the D5.  For set up and debugging, you can use a scope to monitor the comparator's output on board pin J1[15] to verify the 50-50 duty cycle.  The decoded uart signal at 300 baud is also presented on the board's J1[1] pin.  If you like, you can send this signal to an external UART.  I like using the Teensy myself.  Just remember that the other device must be 3.3V compatible and that the UART must be set to 300 baud and two stop bits.  
+The input to the receiver's comparator is on signal CMP0_IN1 on pin J1[13].  This input needs to be connected to the "MIC" output on P2 on the D5.  For set up and debugging, you can use a scope to monitor the comparator's output on board pin J1[15] to verify the 50-50 duty cycle.  The decoded uart signal at 300 baud is also presented on the board's J1[1] pin.  If you like, you can send this signal to an external UART.  I like using the Teensy myself.  Just remember that the other device must be 3.3V compatible and that the UART must be set to 300 baud and two stop bits.
+
+---
+## FRDM-K64F Device Firmware Testing
+---
+
+Once the firmware is loaded onto the FRDM-K64F, it's good practice to verify the board set-up prior to connecting it to the D5.  I have a set of tests that can be run on the board where the tests assume that the transmitter output (J4[11]) is wrapped back into the receiver input (J1[13]).  Here's a photo that shows the FRDM-K64F's set-up for the firmware verification tests:  
+
+![alt text](./images/FRDM-K64F-Board.jpg?raw=true "MEK6802D5")
+
+The test_cassette_interface application program will be used to test the FRMD's firmware.  What the test program does is it writes data to the transmitter and then reads any data received on the receivers.  It then compares the data sent to the data received to determine of the test either passed or failed.  After the test completes, it reports the final results of the test.
+
+An example execution of test_cassette_interface follows:
+```
+$ ./bin/test_cassette_interface.exe -i COM20 -bt 115200 -t 5 -n 8
+Successfully connected to UART on port COM20 at baud rate 115200.
+Connected to transmitter port COM20 at baud rate 115200
+Test 5 Passed!
+```
+
+A full description of test_cassette_interface is given later in this document.
+
+Once you are satisfied with the FRMD-K64F is working correctly, it's time to connect it to the D5 for full system testing.
+
+---
+## MEK6802D5 System Testing
+---
+
+Now it's time to connect the FRDM-K64F to the MEK6802D5 and see if this thing will actually work.  
+Here is a photo with everything connected together:
+
+![alt text](./images/final_example.jpg?raw=true "MEK6802D5 with FRDM-K64F")
+
+As you can see in the photo, I've soldered together two audio jacks that I've used to connect the D5's "EAR" and "MIC" connectors to the FRDM-F64K pins.  The jack on the "EAR" connector, P3, is connected to pin J4[11], DAC0_OUT.  The jack on the "MIC" connector, P2, is connected to pin J1[13], CMP0_IN1.  
+
+Once everything is connected and powered up, it's time to test out all of our work.  What I want to test first is to see if I can load a binary file into the D5's memory.  So on my host, I go to the ../mek6802d5-cassette-interface/mek6802d5-loader directory and execute the following command:
+
+```
+$ ./bin/mek6802d5-loader.exe -f ./test/help.s19 -p COM20 -b 115200 -c 1024
+Successfully connected to UART on port COM20 at baud rate 115200.
+DCB is ready for use.
+Sending file ./test/help.s19 to port COM20 at baud rate 115200
+```
+
+On the D5, I then press the RS button, followed by the FS button, and then the P/L button.  The display on the D5 should go blank for about a minute and then show a dash on the most left digit.  Then press 0 followed by GO and you should then see HELP-- displayed across all six digits on the D5.
+
+The only thing left is to test to see if we can save from the D5's memory to the host.  
+
+NOTE:
+
+At this point, this feature is not working and to be truthful, I had the same issue with the bit-boffer.  For the tape output, the D5 uses a voltage divider network with a 4.7K ohm resister in series with a 47 ohm resistor with the output being the center tap between the two resisters.  This means if we have a clean 5V input signal, we only get a 50mV signal on the output. The amplitude of the output signal isn't enough for the FRDM-K64F to detect.  To get around this issue, I decided to tap into the output data stream on the D5 and construct my own filter circuit as defined in the image below:
+
+![alt text](./images//MEK6802D5-Tape-Output.jpg?raw=true "MEK6802D5 Tape Output")
+
+I taped into the signal after C32, the AC isolation capacitor and prior to R9, the top of the voltage divider.  I then ran this signal through my own isolation capacitor, just to be save, to the center tap of a pair of 2.2K ohm resistors.  The resistors set up a mid point biasing voltage between Vcc and Vee (3.3V and gnd).  I then ran this signal into the CMP0_IN1 pin, J1[13] on the FRDM-K64F.  With the biasing voltage being at the mid point, I needed to adjust up the voltage on the 6-bit DAC to the complement input to CMP0, the comparator.  I could have just as easily adjusted the values to the pair of 2.2K resistors to reduce the voltage to something slightly below the mid point, but adjusting the voltage was the simpler of the two options.  Replacing the lower resister with a 5K ohm multi-turn pot may be the best option if you care to go that way.
+
+I also had to modify the ISR routine for CMP0.  Instead of measuring the period between the rising edge and the falling edge, I had to measure the period between two consecutive rising edges to determine the period.  Determining the period is necessary in order to determine if we are receiving a one or a zero.  The reason why I originally went with half period is because of the inherent error induced by the difference in the period between a one and a zero.  With a half period, the error is reduced in half.  But it seems to work perfectly even with the increase in the error.
+
+Now what do I mean by the inherent error.  I'm measuring the period between consecutive rising edges.  After the measurement of the second edge, it can be determined if this is a period for a one or a period for a zero.  This means that I have a one period delay between when the period actually changes until the output will change (DECODED_UART, J1[1]).  With the periods between a one and a zero being different, this means that the delay for a one will be less than the delay for a zero (zero has twice the period of a one). There is a way to remove this error by requiring two one periods before changing the output; this would make the delay equal between a one and a zero, but it seems to be working with this inherent error, so I'm going to leave it alone for now.  It's just a potential issue that the user needs to be aware of in the future.
+
+With is modification, the punch command worked perfectly, as shown above in the description of the puncher application.  Now I could have modified the tape output circuit on the D5, but with this board being over forty years old, I felt that this was the safer option, even though it goes against my original concept of having a single board solution.
+
+---
+# Application Programs
+---
+
+The following is a description for the host application programs that are used to test and interact with the FRDM-K64F and through it, to the D5.
 
 ---
 ## test_cassette_interface
 ---
 
-NOTE: I modified my bit-boffer test program to work with the FRDM-K64F board.  My design with the bit-boffer required two Teensy boards with both boards running at 300 baud.  This design requires just a single FRDM-K64F with the com port running at 115200 baud.  It is still possible to test the decoded uart signal coming from the MEK6802D5 by connecting a Teensy's RX pin to pin J1[1] on the FRDM-K64F board.  But I use this mode just for testing.
+I modified my bit-boffer test program to work with the FRDM-K64F board.  My design with the bit-boffer required two Teensy boards with both boards running at 300 baud.  This design requires just a single FRDM-K64F with the com port running at 115200 baud.  It is still possible to test the decoded uart signal coming from the MEK6802D5 by connecting a Teensy's RX pin to pin J1[1] on the FRDM-K64F board.  But I use this mode just for verification of the decoded uart signal.
 
 The test_cassette_interface application program runs on a Widows host and can be built using gcc.
 
@@ -247,44 +307,6 @@ Checksum passed: 0x00
 ```
 
 As noted in the help menu, you can have the mek6802d5-puncher program save the data to a specified file. 
-
----
-## System Testing
----
-
-Now it's time to connect the FRDM-K64F to the MEK6802D5 and see if this thing will actually work.  
-Here is a photo with everything connected together:
-
-![alt text](./images/final_example.jpg?raw=true "MEK6802D5 with FRDM-K64F")
-
-As you can see in the photo, I've soldered together two audio jacks that I've used to connect the D5's "EAR" and "MIC" connectors to the FRDM-F64K pins.  The jack on the "EAR" connector, P3, is connected to pin J4[11], DAC0_OUT.  The jack on the "MIC" connector, P2, is connected to pin J1[13], CMP0_IN1.  
-
-Once everything is connected and powered up, it's time to test out all of our work.  What I want to test first is to see if I can load a binary file into the D5's memory.  So on my host, I go to the ../mek6802d5-cassette-interface/mek6802d5-loader directory and execute the following command:
-
-```
-$ ./bin/mek6802d5-loader.exe -f ./test/help.s19 -p COM20 -b 115200 -c 1024
-Successfully connected to UART on port COM20 at baud rate 115200.
-DCB is ready for use.
-Sending file ./test/help.s19 to port COM20 at baud rate 115200
-```
-
-On the D5, I then press the RS button, followed by the FS button, and then the P/L button.  The display on the D5 should go blank for about a minute and then show a dash on the most left digit.  Then press 0 followed by GO and you should then see HELP-- displayed across all six digits on the D5.
-
-The only thing left is to test to see if we can save from the D5's memory to the host.  
-
-NOTE:
-
-At this point, this feature is not working and to be truthful, I had the same issue with the bit-boffer.  For the tape output, the D5 uses a voltage divider network with a 4.7K ohm resister in series with a 47 ohm resistor with the output being the center tap between the two resisters.  This means if we have a clean 5V input signal, we only get a 50mV signal on the output. The amplitude of the output signal isn't enough for the FRDM-K64F to detect.  To get around this issue, I decided to tap into the output data stream on the D5 and construct my own filter circuit as defined in the image below:
-
-![alt text](./images//MEK6802D5-Tape-Output.jpg?raw=true "MEK6802D5 Tape Output")
-
-I taped into the signal after C32, the AC isolation capacitor and prior to R9, the top of the voltage divider.  I then ran this signal through my own isolation capacitor, just to be save, to the center tap of a pair of 2.2K ohm resistors.  The resistors set up a mid point biasing voltage between Vcc and Vee (3.3V and gnd).  I then ran this signal into the CMP0_IN1 pin, J1[13] on the FRDM-K64F.  With the biasing voltage being at the mid point, I needed to adjust up the voltage on the 6-bit DAC to the complement input to CMP0, the comparator.  I could have just as easily adjusted the values to the pair of 2.2K resistors to reduce the voltage to something slightly below the mid point, but adjusting the voltage was the simpler of the two options.  Replacing the lower resister with a 5K ohm multi-turn pot may be the best option if you care to go that way.
-
-I also had to modify the ISR routine for CMP0.  Instead of measuring the period between the rising edge and the falling edge, I had to measure the period between two consecutive rising edges to determine the period.  Determining the period is necessary in order to determine if we are receiving a one or a zero.  The reason why I originally went with half period is because of the inherent error induced by the difference in the period between a one and a zero.  With a half period, the error is reduced in half.  But it seems to work perfectly even with the increase in the error.
-
-Now what do I mean by the inherent error.  I'm measuring the period between consecutive rising edges.  After the measurement of the second edge, it can be determined if this is a period for a one or a period for a zero.  This means that I have a one period delay between when the period actually changes until the output will change (DECODED_UART, J1[1]).  With the periods between a one and a zero being different, this means that the delay for a one will be less than the delay for a zero (zero has twice the period of a one). There is a way to remove this error by requiring two one periods before changing the output; this would make the delay equal between a one and a zero, but it seems to be working with this inherent error, so I'm going to leave it alone for now.  It's just a potential issue that the user needs to be aware of in the future.
-
-With is modification, the punch command worked perfectly, as shown above in the description of the puncher application.  Now I could have modified the tape output circuit on the D5, but with this board being over forty years old, I felt that this was the safer option, even though it goes against my original concept of having a single board solution.
 
 ---
 That's it for now and most of all, have fun with all of your projects.
