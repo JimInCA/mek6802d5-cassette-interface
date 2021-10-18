@@ -118,13 +118,13 @@ Now what do I mean by the inherent error.  I'm measuring the period between cons
 With is modification, the punch command worked perfectly, as shown above in the description of the puncher application.  Now I could have modified the tape output circuit on the D5, but with this board being over forty years old, I felt that this was the safer option, even though it goes against my original concept of having a single board solution.
 
 ---
-# Application Programs
+## Application Programs
 ---
 
 The following is a description for the host application programs that are used to test and interact with the FRDM-K64F and through it, to the D5.
 
 ---
-## test_cassette_interface
+### test_cassette_interface
 ---
 
 I modified my bit-boffer test program to work with the FRDM-K64F board.  My design with the bit-boffer required two Teensy boards with both boards running at 300 baud.  This design requires just a single FRDM-K64F with the com port running at 115200 baud.  It is still possible to test the decoded uart signal coming from the MEK6802D5 by connecting a Teensy's RX pin to pin J1[1] on the FRDM-K64F board.  But I use this mode just for verification of the decoded uart signal.
@@ -180,7 +180,7 @@ Test 5 Passed!
 ```
 
 ---
-## mek6802d5-loader
+### mek6802d5-loader
 ---
 mek6802d5-loader is the application that you'll need to run to load code into the D5's ram.  It too can be built with either gcc or Visual Studio.
 
@@ -211,7 +211,7 @@ Sending file ./test/used5.s19 to port COM20 at baud rate 115200
 When the load completes, it writes a dash to the first character of the six character display.  Depending on the size of the binary, this can take a minute or two.  Then all you need to do is press the 0 key followed by the G0 key on the D5's keypad to execute the program just loaded to the D5.
 
 ---
-## mek6802d5-puncher
+### mek6802d5-puncher
 ---
 
 mek6802d5-puncher is an application that can be used to capture the data coming from the D5 when the punch command is executed to save a section of the D5's memory to tape.  
@@ -308,8 +308,9 @@ Checksum passed: 0x00
         0xd7
 ```
 
-As noted in the help menu, you can have the mek6802d5-puncher program save the data to a specified file. 
+As noted in the help menu, you can have the mek6802d5-puncher program save the data to a specified file.
 
 ---
-That's it for now and most of all, have fun with all of your projects.
-
+## Conclusion
+---
+As with all fun projects, there comes a time when we must admit that the project is completed.  This project has been a lot of fun in figuring out how to duplicate the circuits on the bit-boffer using the peripherals on the FRDM-K64F along with the challenge of getting everything to work with the MEK6802D5.  There are still a couple of minor issues that I'd like to clean up such as the need to press the reset button on the FRDM-K64F after power-up in order for my program to load on the target microprocessor.  There's also an annoying pop-up window when ever I attach the board to the host that I'd like to suppress.  But I guess that these will have to wait for another time. So I guess that this is it for now, but most of all, have fun with all of your projects.
