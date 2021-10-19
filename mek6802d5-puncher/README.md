@@ -31,7 +31,7 @@ Linking bin/mek6802d5-puncher complete!
 ## Puncher Program Arguments
 ---
 
-Here is an explanation of the different user arguments available for the loader application:
+Here is an explanation of the different user arguments available for the puncher application:
 ```
 $ ./bin/mek6802d5-puncher.exe -h
 usage: mek6802d5-puncher [-h] [-f FILE] -p COMPORT [-b BAUDRATE] [-v]

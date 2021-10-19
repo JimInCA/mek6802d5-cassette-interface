@@ -28,7 +28,7 @@ Linking bin/test_cassette_interface complete!
 ```
 
 ---
-## Loader Program Arguments
+## Test Program Arguments
 ---
 
 Here is an explanation of the different user arguments available for the test application:
