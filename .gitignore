@@ -9,4 +9,6 @@ Release/
 */obj
 */bin
 */x64
+*/.vs
+*.user
 
