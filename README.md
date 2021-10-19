@@ -31,6 +31,7 @@ The following image shows the basic concept for this application.
 <li>J1[15]/CMP0_OUT Receiver Comparator Output for debugging</li>
 <li>J1[1]/PTB18 Receiver Decoded UART Output for debugging</li>
 <li>J1[8]/PTA1 SCOPE_TRIGGER for debugging</li>
+<li>J3[4] 3.3V</li>
 <li>J2[3] GND</li>
 <li>J3[12] GND</li>
 <li>J3[14] GND</li>
