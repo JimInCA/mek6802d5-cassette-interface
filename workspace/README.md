@@ -5,22 +5,30 @@ The intent of this program is to emulate the cassette interface for the Motorola
 
 For loading, what this program does is it simulates the audio signal that would normally be coming from a cassette tape drive.  This provides the ability to write your assembly code in a standard text editor and use the Motorola 6800 assembler to generate your binary file that can then be loaded using this program.  You can also use this program to save the code or data located in either the board's ram or rom.  
 
-Toolchain supported
-===================
+---
+## Toolchain supported
+---
+
 - MCUXpresso  11.4.0
 
-Hardware requirements
-=====================
+---
+## Hardware requirements
+---
+
 - Mini/Micro USB cable
 - FRDM-K64F board
 - Personal Computer
 
-Board settings
-==============
+---
+## Board settings
+---
+
 Nothing special is needed.
 
-Preparing the software
-======================
+---
+## Preparing the software
+---
+
 You will first need to install MCUXpresso Version 11.4.0. This is the version that I'm using,
 but other versions may work as well.  Once you have MCUXpresso installed, execute the program.
 Once MCUXpresso comes up, you will need to select 'Switch Workspace -> Other...' from the File 
@@ -33,8 +41,10 @@ mek6802d5_cassette_interface program into the project Explorer tab.  Then simply
 mek6802d5_cassette_interface project, right click to bring up the menu, and then select Build Project.
 This should compile the program.
 
-Prepare the board
-=================
+---
+## Prepare the board
+---
+
 1.  Connect a USB cable between the PC host and the OpenSDA USB port on the board.
 2.  Open a serial terminal on PC for OpenSDA serial device with these settings:
     - 115200 baud rate
@@ -47,8 +57,8 @@ Prepare the board
 5.  A scope may be used to verify the output signal on pin J4[11]:DAC output using an oscilloscope.  
 6.  Pin J1[8] can be used as a trigger for the scope.
 
-Running the loader
-==================
+---
+## What to do now?
+---
 
-TBD
-
+There are three application programs that can be used in conjunction with the FRDM-K64F.  One application program is for testing the firmware, one is for loading programs onto the MEK6802D5, and one is for retrieving code/data from the MEK6802D5.  You can find this applications in parallel directories to the workspace directory where this firmware is contained.
