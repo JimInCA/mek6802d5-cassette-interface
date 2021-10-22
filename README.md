@@ -116,7 +116,7 @@ I also had to modify the ISR routine for CMP0.  Instead of measuring the period 
 
 Now what do I mean by the inherent error.  I'm measuring the period between consecutive rising edges.  After the measurement of the second edge, it can be determined if this is a period for a one or a period for a zero.  This means that I have a one period delay between when the period actually changes until the output will change (DECODED_UART, J1[1]).  With the periods between a one and a zero being different, this means that the delay for a one will be less than the delay for a zero (zero has twice the period of a one). There is a way to remove this error by requiring two one periods before changing the output; this would make the delay equal between a one and a zero, but it seems to be working with this inherent error, so I'm going to leave it alone for now.  It's just a potential issue that the user needs to be aware of in the future.
 
-With is modification, the punch command worked perfectly, as shown above in the description of the puncher application.  Now I could have modified the tape output circuit on the D5, but with this board being over forty years old, I felt that this was the safer option, even though it goes against my original concept of having a single board solution.
+With this modification, the punch command worked perfectly as shown in the description of the puncher application later in this document.  Now I could have modified the tape output circuit on the D5, but with this board being over forty years old, I felt that this was the safer option, even though it goes against my original design concept of having a single board solution with no external components.
 
 ---
 ## Application Programs
