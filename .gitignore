@@ -5,7 +5,7 @@ USB2UART_Bridge/
 Debug/
 Release/
 *.launch
-*.txt
+mek6802d5-loader/*.txt
 */obj
 */bin
 */x64
