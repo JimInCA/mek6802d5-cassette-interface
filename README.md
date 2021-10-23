@@ -23,7 +23,7 @@ The intent of this project it to emulate the audio cassette tape drive by replac
 
 The following image shows the basic concept for this application.
 
-![alt text](./images/cassette_interface.jpeg?raw=true "MEK6802D5")
+![alt text](./images/cassette_interface.jpg?raw=true "MEK6802D5")
 
 <ul>
 <li>J4[11]/DAC0_OUT Transmitter DAC Output</li>
@@ -108,7 +108,7 @@ NOTE:
 
 At this point, this feature is not working and to be truthful, I had the same issue with the bit-boffer.  For the tape output, the D5 uses a voltage divider network with a 4.7K ohm resister in series with a 47 ohm resistor with the output being the center tap between the two resisters.  This means if we have a clean 5V input signal, we only get a 50mV signal on the output. The amplitude of the output signal isn't enough for the FRDM-K64F to detect.  To get around this issue, I decided to tap into the output data stream on the D5 and construct my own filter circuit as defined in the image below:
 
-![alt text](./images//MEK6802D5-Tape-Output.jpg?raw=true "MEK6802D5 Tape Output")
+![alt text](./images/MEK6802D5-Tape-Output.jpg?raw=true "MEK6802D5 Tape Output")
 
 I taped into the signal after C32, the AC isolation capacitor and prior to R9, the top of the voltage divider.  I then ran this signal through my own isolation capacitor, just to be save, to the center tap of a pair of 2.2K ohm resistors.  The resistors set up a mid point biasing voltage between Vcc and Vee (3.3V and gnd).  I then ran this signal into the CMP0_IN1 pin, J1[13] on the FRDM-K64F.  With the biasing voltage being at the mid point, I needed to adjust up the voltage on the 6-bit DAC to the complement input to CMP0, the comparator.  I could have just as easily adjusted the values to the pair of 2.2K resistors to reduce the voltage to something slightly below the mid point, but adjusting the voltage was the simpler of the two options.  Replacing the lower resister with a 5K ohm multi-turn pot may be the best option if you care to go that way.
 
@@ -116,7 +116,9 @@ I also had to modify the ISR routine for CMP0.  Instead of measuring the period 
 
 Now what do I mean by the inherent error.  I'm measuring the period between consecutive rising edges.  After the measurement of the second edge, it can be determined if this is a period for a one or a period for a zero.  This means that I have a one period delay between when the period actually changes until the output will change (DECODED_UART, J1[1]).  With the periods between a one and a zero being different, this means that the delay for a one will be less than the delay for a zero (zero has twice the period of a one). There is a way to remove this error by requiring two one periods before changing the output; this would make the delay equal between a one and a zero, but it seems to be working with this inherent error, so I'm going to leave it alone for now.  It's just a potential issue that the user needs to be aware of in the future.
 
-With is modification, the punch command worked perfectly, as shown above in the description of the puncher application.  Now I could have modified the tape output circuit on the D5, but with this board being over forty years old, I felt that this was the safer option, even though it goes against my original concept of having a single board solution.
+With is modification, the punch command worked perfectly, as shown above in the description of the puncher application.  Now I could have modified the tape output circuit on the D5, but with this board being over forty years old, I felt that this was the safer option, even though it goes against my original concept of having a single board solution.  To show the final setup for the MEK6802D5 with the modified receiver circuit and the FRDM-K64F, I've included the following photo.
+
+![alt text](./images/final_example_with_mod.jpg?raw=true "MEK6802D5 with FRDM-K64F with Modified Receiver Circuit")
 
 ---
 ## Application Programs
@@ -309,7 +311,7 @@ Checksum passed: 0x00
         0xd7
 ```
 
-As noted in the help menu, you can have the mek6802d5-puncher program save the data to a specified file.
+As noted in the help menu, you can have the mek6802d5-puncher program save the data to a specified file.  As an example for when the puncher writes to a file, I've included the expected output file for help.s19 along with the expected output file for used5.s19 in the ./doc directory.  Just for fun, I also punched the contents for the D5DEBUG Program, ROM addresses 0xf000 through 0xf7ff, and saved it in file d5debug_bytes.txt.  This way, if I ever need to burn a new ROM for the D5, I have a listing of the binary data that I could use as input to a ROM programmer.
 
 ---
 ## Conclusion
