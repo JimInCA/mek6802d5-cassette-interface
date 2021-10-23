@@ -118,6 +118,8 @@ Now what do I mean by the inherent error.  I'm measuring the period between cons
 
 With this modification, the punch command worked perfectly as shown in the description of the puncher application later in this document.  Now I could have modified the tape output circuit on the D5, but with this board being over forty years old, I felt that this was the safer option, even though it goes against my original design concept of having a single board solution with no external components.
 
+I've included the following photo of my final setup that includes the modified output circuit from the D5 as an example of what I needed to do to get the complete system to work properly. 
+
 ![alt text](./images/final_example_with_mod.jpg?raw=true "MEK6802D5 with FRDM-K64F with Modified Receiver Circuit")
 
 ---
