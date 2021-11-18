@@ -11,7 +11,7 @@ I originally implemented a cassette interface for the MEK6802D5 using a circuit 
 ## MEK6802D5 Cassette Interface
 ---
 
-The Cassette Interface on the MEK6802D5 uses Kansas City Standard (KCS) encoding to write and retrieve data to and from a cassette tape.  So the question is then, what is Kansas City Standard?  KCS was developed in 1975 as a means to save and retrieve computer data using an inexpensive consumer quality cassette tape player.  What is specifies is a process to convert computer data into two different audio frequencies that could then be written to or retrieved from to the tape.  
+The Cassette Interface on the MEK6802D5 uses Kansas City Standard (KCS) encoding to write and retrieve data to and from a cassette tape.  So the question is then, what is Kansas City Standard?  KCS was developed in 1975 as a means to save and retrieve computer data using an inexpensive consumer quality cassette tape player.  What it specifies is a process to convert computer data into two different audio frequencies that could then be written to or retrieved from to the tape.  
 
 What the MEK6802D5 does is it takes the output from the TX pin on a UART and converts all low data bits to 1200 hertz and all high data to 2400 hertz.  The over all baud rate is set to 300 bits per second, so this means that a low data bit will equal four cycles at 1200Hz and a high data bit will equal eight cycles at 2400Hz.  It reverses the process on reading the data from a tape by converting four cycles at 1200Hz to a zero and eight cycles at 2400Hz to a one and sends this data stream to the RX pin on the UART.
 
